@@ -1,0 +1,28 @@
+export const defaultPhanCongKtv = {
+  phanCongId: 0,
+  taiKhoanKTVId: 0,
+  trangThai: 'CHO_PHAN_HOI',
+  thoiGianDuKien: 0,
+  thoiGianPhatSinh: 0,
+  thoiGianBatDau: null,
+  thoiGianHoanThien: null,
+  dangXinGiaHan: false,
+  soThoiGianXinGiaHan: 0,
+  soLanGiaHan: 0,
+  tongThoiGianDaXinGiaHan: 0,
+  moTaCongViec: '',
+  daChapNhan: false,
+  thoiGianTuChoi: null,
+  lyDoTuChoi: '',
+  thoiGianLamViecThucTe: 0,
+  trangThaiCuoiCung: '',
+  thoiGianLamViecThucTe: 0,
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+};
+
+export const createPhanCongKtv = (doc) => ({
+  id: doc.id,
+  ...defaultPhanCongKtv,
+  ...doc.data(),
+});
