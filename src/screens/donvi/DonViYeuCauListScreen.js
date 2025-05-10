@@ -63,6 +63,7 @@ export default function DonViYeuCauListScreen() {
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
+            onPress={() => navigation.navigate('NewRequest', { yeuCauId: item.id })}
             onLongPress={() => handleLongPress(item)}
             style={[styles.card, { borderLeftColor: getTrangThaiYeuCauColor(item.trangThai) }]}
         >
@@ -77,6 +78,7 @@ export default function DonViYeuCauListScreen() {
             </View>
         </TouchableOpacity>
     );
+
 
     return (
         <BottomSheetModalProvider>
@@ -139,7 +141,7 @@ export default function DonViYeuCauListScreen() {
             </BottomSheet>
 
             <TouchableOpacity
-                onPress={() => { }}
+                onPress={() => navigation.navigate('NewRequest')}
                 style={{
                     position: 'absolute',
                     bottom: 24,
