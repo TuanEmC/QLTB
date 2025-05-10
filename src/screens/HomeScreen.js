@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Button, StyleSheet, Text } from 'react-native';
 import AppLayout from '../components/layout/AppLayout';
 import { normalizeCollection } from '../services/normalizeTools';
+import { useSession } from '../context/SessionContext';
+import { useNavigation } from '@react-navigation/native';
+
 import {
   defaultYeuCau,
   defaultTaiKhoan,
@@ -60,14 +63,27 @@ const handleNormalizeAll = async () => {
   setTimeout(() => {
     alert('✅ Đã chuẩn hóa toàn bộ Firestore!');
   }, 100);
-  
+
 };
 
+
+
 export default function HomeScreen() {
+  const { currentUser } = useSession();
+  const navigation = useNavigation();
+
   return (
     <AppLayout showBottomBar={true}>
       <View style={styles.container}>
-        <Text>HOME</Text>
+        <Text style={{ marginBottom: 12, fontSize: 16 }}>
+          {currentUser
+            ? `Xin chào, ${currentUser.tenTaiKhoan}`
+            : 'Bạn chưa đăng nhập'}
+        </Text>
+        <Button
+          title="🧪 Mở màn test Bottom Sheet"
+          onPress={() => navigation.navigate('TestBottomSheet')}
+        />
       </View>
     </AppLayout>
   );

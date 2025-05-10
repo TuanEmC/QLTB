@@ -11,7 +11,7 @@ export default function BottomNavigationBar() {
   const route = useRoute();
   const { colors } = useAppTheme();
   const isActive = (routeName) => route.name === routeName;
-    
+
   const { currentUser } = useSession();
 
   const handleNavigate = (target) => {
@@ -26,7 +26,7 @@ export default function BottomNavigationBar() {
       );
       return;
     }
-  
+
     if (target === 'Dashboard') {
       switch (currentUser.vaiTroId) {
         case 1:
@@ -45,11 +45,10 @@ export default function BottomNavigationBar() {
       navigation.navigate(target);
     }
   };
-  
+
 
   return (
     <View style={styles.wrapper}>
-      {/* Bar nền */}
       <View style={[styles.container, {
         backgroundColor: colors.surface,
         borderTopLeftRadius: 24,
@@ -69,7 +68,7 @@ export default function BottomNavigationBar() {
           <Text style={{ color: isActive('Dashboard') ? colors.primary : colors.onSurfaceVariant, fontSize: 12 }}>Dashboard</Text>
         </TouchableOpacity>
 
-        <View style={styles.spacer} /> {/* chừa chỗ cho FAB */}
+        <View style={styles.spacer} />
 
         <TouchableOpacity style={styles.item} onPress={() => handleNavigate('Profile')}>
           <Ionicons
@@ -81,13 +80,11 @@ export default function BottomNavigationBar() {
         </TouchableOpacity>
       </View>
 
-      {/* Nền dưới nút nổi */}
       <View style={[styles.fabHole, { backgroundColor: colors.surface }]} />
 
-      {/* FAB Home */}
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => navigation.navigate('MainDrawer')}
       >
         <Ionicons name="home" size={30} color={colors.onPrimary} />
       </TouchableOpacity>
@@ -116,7 +113,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   spacer: {
-    width: 72, // chừa chỗ cho FAB
+    width: 72,
   },
   fab: {
     position: 'absolute',

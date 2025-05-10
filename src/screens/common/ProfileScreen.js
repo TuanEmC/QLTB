@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import useAppTheme from '../../hooks/useAppTheme';
 import { useSession } from '../../context/SessionContext';
+import AppLayout from '../../components/layout/AppLayout';
 
 export default function ProfileScreen() {
   const { colors } = useAppTheme();
@@ -16,7 +17,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <AppLayout showBottomBar={true}> <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.label, { color: colors.primary }]}>Hồ sơ người dùng</Text>
       <Text style={{ color: colors.onSurface }}>Tên đăng nhập: {currentUser.tenTaiKhoan}</Text>
       <Text style={{ color: colors.onSurface }}>Họ tên: {currentUser.hoTen}</Text>
@@ -25,6 +26,8 @@ export default function ProfileScreen() {
       <Text style={{ color: colors.onSurface }}>Vai trò ID: {currentUser.vaiTroId}</Text>
       <Text style={{ color: colors.onSurface }}>Trạng thái: {currentUser.trangThai}</Text>
     </View>
+    </AppLayout>
+
   );
 }
 

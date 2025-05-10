@@ -1,50 +1,30 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Button, Alert } from 'react-native';
-import useAppTheme from '../../hooks/useAppTheme';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { getAllTaiKhoan } from '../../services/taiKhoanService';
 import { useSession } from '../../context/SessionContext';
+import useAppTheme from '../../hooks/useAppTheme';
+import { useNavigation } from '@react-navigation/native';
 
-const dummyAccounts = [
-  {
-    id: '1',
-    tenTaiKhoan: 'admin1',
-    matKhau: '123456',
-    hoTen: 'Nguyễn Văn A',
-    vaiTroId: 1,
-    email: 'admin1@example.com',
-    soDienThoai: '0909000001',
-    trangThai: 'dang_hoat_dong',
-  },
-  {
-    id: '2',
-    tenTaiKhoan: 'ktv1',
-    matKhau: '123456',
-    hoTen: 'Kỹ Thuật Viên 1',
-    vaiTroId: 2,
-    email: 'ktv1@example.com',
-    soDienThoai: '0909000002',
-    trangThai: 'dang_hoat_dong',
-  },
-  {
-    id: '3',
-    tenTaiKhoan: 'donvi1',
-    matKhau: '123456',
-    hoTen: 'QL Đơn Vị 1',
-    vaiTroId: 3,
-    email: 'donvi1@example.com',
-    soDienThoai: '0909000003',
-    trangThai: 'dang_hoat_dong',
-  },
-];
-
-export default function DebugLoginScreen({ navigation }) {
+export default function DebugLoginScreen() {
   const { colors } = useAppTheme();
+  const navigation = useNavigation();
   const { setCurrentUser } = useSession();
+
+  const [taiKhoanList, setTaiKhoanList] = useState([]);
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    const fetchTaiKhoan = async () => {
+      const data = await getAllTaiKhoan();
+      setTaiKhoanList(data);
+    };
+    fetchTaiKhoan();
+  }, []);
 
   const handleLogin = () => {
     if (!selected) return;
-    setCurrentUser({ ...selected, createdAt: Date.now(), updatedAt: Date.now() });
-    navigation.navigate('Home');
+    setCurrentUser(selected);
+    navigation.replace('MainDrawer'); // hoặc navigate, tùy bạn cấu hình
   };
 
   return (
@@ -52,20 +32,24 @@ export default function DebugLoginScreen({ navigation }) {
       <Text style={[styles.title, { color: colors.primary }]}>Chọn tài khoản để đăng nhập</Text>
 
       <FlatList
-        data={dummyAccounts}
+        data={taiKhoanList}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => setSelected(item)}
             style={[
               styles.card,
               {
-                backgroundColor: selected?.id === item.id ? colors.primaryContainer : colors.surface,
+                backgroundColor: selected?.id === item.id
+                  ? colors.primaryContainer
+                  : colors.surface,
               },
             ]}
+            onPress={() => setSelected(item)}
           >
             <Text style={{ color: colors.onSurface }}>Tên: {item.tenTaiKhoan}</Text>
-            <Text style={{ color: colors.onSurfaceVariant }}>Vai trò ID: {item.vaiTroId}</Text>
+            <Text style={{ color: colors.onSurfaceVariant }}>
+              Vai trò ID: {item.vaiTroId}
+            </Text>
           </TouchableOpacity>
         )}
         style={{ flex: 1 }}
@@ -84,19 +68,7 @@ export default function DebugLoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 16,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-  },
-  card: {
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
+  container: { flex: 1, padding: 16 },
+  title: { fontSize: 20, marginBottom: 16, fontWeight: 'bold', alignSelf: 'center' },
+  card: { padding: 16, borderRadius: 8, marginBottom: 12 },
 });

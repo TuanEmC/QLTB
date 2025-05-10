@@ -1,34 +1,15 @@
-
-// import React, { useEffect, useState } from 'react';
-// import { View, Text, ScrollView } from 'react-native';
-// import { collection, getDocs } from 'firebase/firestore';
-// import { db } from './src/services/firebaseConfig'; // đúng tên file
-// import { NavigationContainer } from '@react-navigation/native';
-// import AppNavigator from './src/navigation/AppNavigator';
-
-// import { StatusBar } from 'react-native';
-// import useAppTheme from './src/hooks/useAppTheme';
-
-// export default function App() {
-//   const { colorScheme, colors } = useAppTheme();
-
-//   return (
-//     <>
-//       <StatusBar
-//         backgroundColor={colors.primary}
-//         barStyle={colors.onPrimary === '#FFFFFF' ? 'light-content' : 'dark-content'}
-//       />
-//       <NavigationContainer>
-//         <AppNavigator />
-//       </NavigationContainer>
-//     </>
-//   );
-// }
+import 'react-native-gesture-handler'; // luôn là dòng đầu tiên
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { enableScreens } from 'react-native-screens'; // import
 import useAppTheme from './src/hooks/useAppTheme';
 import AppNavigator from './src/navigation/AppNavigator';
-import { StatusBar } from 'react-native';
 import { SessionProvider } from './src/context/SessionContext';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+
+
+enableScreens(); // ✅ GỌI NGAY sau import!
 
 export default function App() {
   const { colors, colorScheme } = useAppTheme();
@@ -44,18 +25,38 @@ export default function App() {
     },
   };
 
+  // return (
+  //   <GestureHandlerRootView style={{ flex: 1 }}>
+  //     <SessionProvider>
+  //       <>
+  //         <StatusBar
+  //           backgroundColor={colors.primary}
+  //           barStyle={colors.onPrimary === '#FFFFFF' ? 'light-content' : 'dark-content'}
+  //         />
+  //         <NavigationContainer theme={navTheme}>
+  //           <AppNavigator />
+  //         </NavigationContainer>
+  //       </>
+  //     </SessionProvider>
+  //   </GestureHandlerRootView>
+  // );
   return (
-    <SessionProvider>
-      <>
-      <StatusBar
-        backgroundColor={colors.primary}
-        barStyle={colors.onPrimary === '#FFFFFF' ? 'light-content' : 'dark-content'}
-      />
-      <NavigationContainer theme={navTheme}>
-        <AppNavigator />
-      </NavigationContainer>
-    </>
-    </SessionProvider>
-    
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SessionProvider>
+        <BottomSheetModalProvider>
+          <>
+            <StatusBar
+              backgroundColor={colors.primary}
+              barStyle={colors.onPrimary === '#FFFFFF' ? 'light-content' : 'dark-content'}
+            />
+            <NavigationContainer theme={navTheme}>
+              <AppNavigator />
+            </NavigationContainer>
+          </>
+        </BottomSheetModalProvider>
+      </SessionProvider>
+    </GestureHandlerRootView>
   );
+
 }
+
