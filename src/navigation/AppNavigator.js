@@ -18,6 +18,7 @@ import KtvDashboard from '../screens/dashboard/KtvDashboard';
 import DonViDashboard from '../screens/dashboard/DonViDashboard';
 import DonViYeuCauListScreen from '../screens/donvi/DonViYeuCauListScreen';
 import TestBottomSheetScreen from '../screens/debug/TestBottomSheetScreen';
+import DeviceListScreen from '../screens/donvi/DeviceListScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -78,8 +79,8 @@ export default function AppNavigator() {
       <Stack.Screen name="KtvDashboard" component={KtvDashboard} />
       <Stack.Screen name="DonViDashboard" component={DonViDashboard} />
       <Stack.Screen name="QLDVDanhSachYeuCau" component={DonViYeuCauListScreen} />
-
       <Stack.Screen name="TestBottomSheet" component={TestBottomSheetScreen} />
+      <Stack.Screen name="DeviceList" component={DeviceListScreen} />
     </Stack.Navigator>
   );
 }

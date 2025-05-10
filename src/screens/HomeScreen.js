@@ -80,10 +80,6 @@ export default function HomeScreen() {
             ? `Xin chào, ${currentUser.tenTaiKhoan}`
             : 'Bạn chưa đăng nhập'}
         </Text>
-        <Button
-          title="🧪 Mở màn test Bottom Sheet"
-          onPress={() => navigation.navigate('TestBottomSheet')}
-        />
       </View>
     </AppLayout>
   );

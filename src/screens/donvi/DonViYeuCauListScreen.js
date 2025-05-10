@@ -10,6 +10,9 @@ import { formatNgayGio } from '../../utils/formatDate';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useRef, useMemo } from 'react';
 import { BottomSheet, ListItem } from 'react-native-elements';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
 
 
 
@@ -21,6 +24,8 @@ export default function DonViYeuCauListScreen() {
     const bottomSheetRef = useRef(null);
     const snapPoints = useMemo(() => ['40%'], []);
     const [isFilterVisible, setIsFilterVisible] = useState(false);
+    const navigation = useNavigation();
+
 
     const openFilterSheet = () => {
         bottomSheetRef.current?.present();
@@ -110,20 +115,6 @@ export default function DonViYeuCauListScreen() {
                     />
                 </View>
             </AppLayout>
-            {/* <View style={styles.container}>
-                <TouchableOpacity onPress={openFilterSheet} style={{ marginBottom: 8 }}>
-                    <Text style={{ color: colors.primary }}>
-                        Bộ lọc: {trangThaiFilter || 'Tất cả'}
-                    </Text>
-                </TouchableOpacity>
-
-                <FlatList
-                    data={yeuCauList}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-                />
-            </View> */}
 
             <BottomSheet isVisible={isFilterVisible}>
                 <ListItem onPress={() => {
@@ -146,6 +137,29 @@ export default function DonViYeuCauListScreen() {
                     </ListItem>
                 ))}
             </BottomSheet>
+
+            <TouchableOpacity
+                onPress={() => { }}
+                style={{
+                    position: 'absolute',
+                    bottom: 24,
+                    right: 24,
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: colors.primary,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    elevation: 6,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                }}
+            >
+                <Ionicons name="add" size={28} color={colors.onPrimary} />
+            </TouchableOpacity>
+
 
         </BottomSheetModalProvider>
 

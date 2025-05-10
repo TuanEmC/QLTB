@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const options = [
     { title: 'Danh sách phòng', icon: 'home-outline', route: 'QLDVPhong' },
-    { title: 'Danh sách thiết bị', icon: 'settings-outline', route: 'QLDVThietBiTheoDV' },
+    { title: 'Danh sách thiết bị', icon: 'settings-outline', route: 'DeviceList' },
     { title: 'Tạo yêu cầu mới', icon: 'add-circle-outline', route: 'ThemYeuCauMoi' },
     { title: 'Danh sách yêu cầu', icon: 'list-outline', route: 'QLDVDanhSachYeuCau' },
 ];
