@@ -51,19 +51,31 @@ export default function DeviceListScreen({ route }) {
         setCurrentFilterKey(null);
     };
 
-    const toggleSelect = (id) => {
-        setSelectedDevices(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
-    };
+    // const toggleSelect = (id) => {
+    //     setSelectedDevices(prev =>
+    //         prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    //     );
+    // };
 
     const renderItem = ({ item }) => (
         <DeviceCardInGrid
             device={item}
             isSelected={selectedDevices.includes(item.id)}
-            onPress={() => (isSelectMode ? toggleSelect(item.id) : navigation.navigate('DeviceDetail', { id: item.id }))}
+            onPress={() => {
+                if (isSelectMode && yeuCauId) {
+                    navigation.navigate('ThietBiDetail', {
+                        thietBiId: item.id,
+                        yeuCauId: yeuCauId,
+                    });
+                } else {
+                    navigation.navigate('ThietBiDetail', {
+                        thietBiId: item.id,
+                    });
+                }
+            }}
         />
     );
+
 
     return (
         <View style={styles.container}>

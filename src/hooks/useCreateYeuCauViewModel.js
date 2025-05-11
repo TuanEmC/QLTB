@@ -26,9 +26,9 @@ export default function useCreateYeuCauViewModel() {
 
     const loadChiTietList = async (id) => {
         try {
-            console.log('✅ id yeu cau de load chi tiet:', id);
+            //console.log('✅ id yeu cau de load chi tiet:', id);
             const list = await getChiTietYeuCauWithDisplay(id);
-            console.log('✅ Danh sách chi tiết tải được:', list);
+            //console.log('✅ Danh sách chi tiết tải được:', list);
             setChiTietList(list);
         } catch (e) {
             console.error('❌ Lỗi khi load chi tiết yêu cầu:', e);

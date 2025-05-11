@@ -20,6 +20,8 @@ import DonViYeuCauListScreen from '../screens/donvi/DonViYeuCauListScreen';
 import TestBottomSheetScreen from '../screens/debug/TestBottomSheetScreen';
 import DeviceListScreen from '../screens/donvi/DeviceListScreen';
 import NewRequestScreen from '../screens/donvi/NewRequestScreen';
+import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
+
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -83,6 +85,7 @@ export default function AppNavigator() {
       <Stack.Screen name="TestBottomSheet" component={TestBottomSheetScreen} />
       <Stack.Screen name="DeviceList" component={DeviceListScreen} />
       <Stack.Screen name="NewRequest" component={NewRequestScreen} />
+      <Stack.Screen name="ThietBiDetail" component={ThietBiDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
     </Stack.Navigator>
   );
 }
