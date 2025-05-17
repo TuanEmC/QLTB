@@ -2,10 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { getTrangThaiThietBiColor } from '../constants/trangThaiThietBi';
 import { getIllustrationForDeviceType } from '../utils/getIllustrationForDeviceType';
+import { Dimensions } from 'react-native';
 
 export default function DeviceCard({ device, onPress, isSelected }) {
+    const screenWidth = Dimensions.get('window').width;
+    const numColumns = 2;
+    const itemWidth = (screenWidth - 16 - numColumns * 8) / numColumns;
     return (
-        <TouchableOpacity style={styles.card} onPress={onPress}>
+        // <TouchableOpacity style={styles.card} onPress={onPress}>
+        <TouchableOpacity style={[styles.card, { width: itemWidth }]} onPress={onPress}>
             <View style={styles.iconArea}>
                 <Image
                     source={getIllustrationForDeviceType(device.tenLoai)}
@@ -37,7 +42,17 @@ export default function DeviceCard({ device, onPress, isSelected }) {
 
 
 const styles = StyleSheet.create({
-    card: { flex: 1, margin: 8, borderWidth: 1, borderRadius: 10, overflow: 'hidden' },
+    // card: { flex: 1, margin: 8, borderWidth: 1, borderRadius: 10, overflow: 'hidden' },
+    card: {
+        flex: 1,
+        margin: 4,
+        minWidth: 0, // tránh bug co giãn
+        borderWidth: 1,
+        borderRadius: 10,
+        backgroundColor: '#fff',
+        overflow: 'hidden',
+    },
+
     iconArea: { height: 80, backgroundColor: '#EEE', justifyContent: 'center', alignItems: 'center' },
     infoArea: { padding: 10 },
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

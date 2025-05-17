@@ -143,7 +143,7 @@ export default function DonViYeuCauListScreen() {
             <TouchableOpacity
                 onPress={() => navigation.navigate('NewRequest')}
                 style={{
-                    position: 'absolute',
+                    position: 'absolute',// vi tri nut noi
                     bottom: 24,
                     right: 24,
                     width: 56,

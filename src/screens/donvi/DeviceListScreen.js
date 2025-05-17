@@ -107,14 +107,6 @@ export default function DeviceListScreen({ route }) {
             )}
 
 
-            {/* <FlatList
-                data={devices}
-                keyExtractor={item => item.id}
-                numColumns={2}
-                renderItem={renderItem}
-                columnWrapperStyle={styles.row}
-                contentContainerStyle={styles.listContent}
-            /> */}
 
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={styles.modalContainer}>

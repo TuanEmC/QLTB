@@ -5,13 +5,16 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { useRoute } from '@react-navigation/native';
 import { getThietBiWithChiTietDisplay } from '../../services/thietBiService';
 import useAppTheme from '../../hooks/useAppTheme';
+import ChiTietYeuCauFormSection from '../../components/ChiTietYeuCauFormSection';
+import { useNavigation } from '@react-navigation/native';
+
 
 const Tab = createMaterialTopTabNavigator();
 
 
 function ThongTinThietBiTab({ thietBi }) {
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { flex: 1 }]}>
             <Text style={styles.title}>{thietBi.tenThietBi}</Text>
             <Text>Mã thiết bị: {thietBi.id}</Text>
             <Text>Loại: {thietBi.tenLoai}</Text>
@@ -22,15 +25,24 @@ function ThongTinThietBiTab({ thietBi }) {
 }
 
 function FormThemChiTietTab({ thietBi, yeuCauId }) {
+    const navigation = useNavigation();
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Gắn thiết bị vào yêu cầu</Text>
-            <Text>(Form nhập mô tả, chọn loại yêu cầu, upload ảnh/video sẽ đặt ở đây)</Text>
-            <Text>ID thiết bị: {thietBi.id}</Text>
-            <Text>Yêu cầu ID: {yeuCauId}</Text>
+        <View style={{ flex: 1 }}>
+            <ChiTietYeuCauFormSection
+                yeuCauId={yeuCauId}
+                thietBiId={thietBi.id}
+                onSuccess={() => {
+                    console.log('✅ Đã lưu xong chi tiết yêu cầu');
+                    navigation.goBack();
+                }}
+            />
         </View>
     );
 }
+
+
+
 
 export default function ThietBiDetailScreen() {
     const route = useRoute();

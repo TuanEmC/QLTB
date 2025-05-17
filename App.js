@@ -1,17 +1,18 @@
-import 'react-native-gesture-handler'; // luôn là dòng đầu tiên
+import 'react-native-gesture-handler'; // luôn trên cùng
+import './src/services/firebaseConfig'; // đảm bảo initializeApp() gọi trước
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { enableScreens } from 'react-native-screens'; // import
+import { enableScreens } from 'react-native-screens';
 import useAppTheme from './src/hooks/useAppTheme';
 import AppNavigator from './src/navigation/AppNavigator';
 import { SessionProvider } from './src/context/SessionContext';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
-
-enableScreens(); // ✅ GỌI NGAY sau import!
+enableScreens();
 
 export default function App() {
+
   const { colors, colorScheme } = useAppTheme();
 
   const navTheme = {
@@ -25,21 +26,6 @@ export default function App() {
     },
   };
 
-  // return (
-  //   <GestureHandlerRootView style={{ flex: 1 }}>
-  //     <SessionProvider>
-  //       <>
-  //         <StatusBar
-  //           backgroundColor={colors.primary}
-  //           barStyle={colors.onPrimary === '#FFFFFF' ? 'light-content' : 'dark-content'}
-  //         />
-  //         <NavigationContainer theme={navTheme}>
-  //           <AppNavigator />
-  //         </NavigationContainer>
-  //       </>
-  //     </SessionProvider>
-  //   </GestureHandlerRootView>
-  // );
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
@@ -57,6 +43,4 @@ export default function App() {
       </SessionProvider>
     </GestureHandlerRootView>
   );
-
 }
-

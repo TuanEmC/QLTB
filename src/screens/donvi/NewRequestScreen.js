@@ -13,6 +13,8 @@ import useCreateYeuCauViewModel from '../../hooks/useCreateYeuCauViewModel';
 import { useSession } from '../../context/SessionContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import RequestDeviceItem from '../../components/RequestDeviceItem';
+import { Ionicons } from '@expo/vector-icons';
+
 
 
 export default function NewRequestScreen() {
@@ -58,6 +60,14 @@ export default function NewRequestScreen() {
         setShowDialog(false);
     };
 
+    const handleReload = () => {
+        if (yeuCauId) {
+            loadYeuCau(yeuCauId);
+            loadChiTietList(yeuCauId);
+        }
+    };
+
+
     const handleThemThietBi = () => {
         if (yeuCauId) {
             navigation.navigate('DeviceList', { isSelectMode: true, yeuCauId });
@@ -66,7 +76,14 @@ export default function NewRequestScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Chi tiết yêu cầu</Text>
+            <View style={styles.titleRow}>
+                <Text style={styles.title}>Chi tiết yêu cầu</Text>
+                <TouchableOpacity onPress={handleReload} style={styles.reloadButton}>
+                    <Ionicons name="reload-circle" size={28} color="#007AFF" />
+                </TouchableOpacity>
+            </View>
+
+
 
             {yeuCau && (
                 <Text style={styles.mota}>Mô tả: {yeuCau.moTa || 'Không có mô tả'}</Text>
@@ -77,7 +94,7 @@ export default function NewRequestScreen() {
 
                 keyExtractor={(item) => item.chiTiet.id.toString()}
                 renderItem={({ item }) => {
-                    console.log('🧱 Chi tiết yêu cầu item:', item);
+                    //console.log('🧱 Chi tiết yêu cầu item:', item);
                     return (
                         <RequestDeviceItem
                             item={item}
@@ -163,4 +180,16 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
     },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    reloadButton: {
+        padding: 4,
+        borderRadius: 50,
+    },
+
+
 });
