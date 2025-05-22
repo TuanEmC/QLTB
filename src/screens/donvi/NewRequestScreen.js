@@ -85,7 +85,8 @@ export default function NewRequestScreen() {
 
 
 
-            {yeuCau && (
+
+            {moTa && (
                 <Text style={styles.mota}>Mô tả: {yeuCau.moTa || 'Không có mô tả'}</Text>
             )}
 
@@ -117,6 +118,7 @@ export default function NewRequestScreen() {
             <Modal visible={showDialog} transparent animationType="fade">
                 <View style={styles.dialogOverlay}>
                     <View style={styles.dialogContent}>
+
                         <Text style={styles.dialogTitle}>Nhập mô tả yêu cầu</Text>
                         <TextInput
                             value={moTa}
@@ -146,6 +148,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, padding: 16 },
     title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
     mota: { fontSize: 14, marginBottom: 8 },
+    tieuDe: { fontSize: 18, marginBottom: 8 },
     card: { padding: 12, backgroundColor: '#eee', marginBottom: 8, borderRadius: 8 },
     deviceName: { fontWeight: 'bold' },
     deviceType: { fontStyle: 'italic' },

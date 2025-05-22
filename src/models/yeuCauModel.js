@@ -10,7 +10,7 @@ export const defaultYeuCau = {
 };
 
 export const createYeuCau = (doc) => ({
-  id: doc.id,
   ...defaultYeuCau,
   ...doc.data(),
+  id: doc.id,
 });

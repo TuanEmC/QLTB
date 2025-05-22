@@ -1,7 +1,7 @@
 // 📁 src/screens/donvi/DonViYeuCauListScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { getYeuCauByDonVi, deleteYeuCau } from '../../services/yeuCauService';
+import { getYeuCauByDonVi, deleteYeuCau, deleteYeuCauWithCascade } from '../../services/yeuCauService';
 import { useSession } from '../../context/SessionContext';
 import { getTrangThaiYeuCauColor, TRANG_THAI_YEU_CAU, TRANG_THAI_YEU_CAU_ALL } from '../../constants/trangThaiYeuCau';
 import useAppTheme from '../../hooks/useAppTheme';
@@ -53,13 +53,20 @@ export default function DonViYeuCauListScreen() {
                 { text: 'Hủy', style: 'cancel' },
                 {
                     text: 'Xóa', style: 'destructive', onPress: async () => {
-                        await deleteYeuCau(item.id);
-                        loadData();
+                        console.log('🗑️ Đang xoá yêu cầu với id =', item.id);
+                        try {
+                            await deleteYeuCauWithCascade(String(item.id));
+                            console.log('✅ Xoá thành công');
+                            loadData();
+                        } catch (e) {
+                            console.error('❌ Lỗi xoá yêu cầu:', e);
+                        }
                     },
                 },
             ]);
         }
     };
+
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
