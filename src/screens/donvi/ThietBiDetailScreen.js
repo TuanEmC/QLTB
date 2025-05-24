@@ -24,7 +24,7 @@ function ThongTinThietBiTab({ thietBi }) {
     );
 }
 
-function FormThemChiTietTab({ thietBi, yeuCauId }) {
+function FormThemChiTietTab({ thietBi, yeuCauId, chiTietYeuCauId }) {
     const navigation = useNavigation();
 
     return (
@@ -32,6 +32,7 @@ function FormThemChiTietTab({ thietBi, yeuCauId }) {
             <ChiTietYeuCauFormSection
                 yeuCauId={yeuCauId}
                 thietBiId={thietBi.id}
+                chiTietYeuCauId={chiTietYeuCauId}
                 onSuccess={() => {
                     console.log('✅ Đã lưu xong chi tiết yêu cầu');
                     navigation.goBack();
@@ -46,7 +47,8 @@ function FormThemChiTietTab({ thietBi, yeuCauId }) {
 
 export default function ThietBiDetailScreen() {
     const route = useRoute();
-    const { thietBiId, yeuCauId } = route.params;
+    const { thietBiId, yeuCauId, chiTietYeuCauId } = route.params;
+
     const [thietBi, setThietBi] = useState(null);
     const { colors } = useAppTheme();
 
@@ -73,7 +75,7 @@ export default function ThietBiDetailScreen() {
             </Tab.Screen>
             {yeuCauId && (
                 <Tab.Screen name="Thêm vào yêu cầu">
-                    {() => <FormThemChiTietTab thietBi={thietBi} yeuCauId={yeuCauId} />}
+                    {() => <FormThemChiTietTab thietBi={thietBi} yeuCauId={yeuCauId} chiTietYeuCauId={chiTietYeuCauId} />}
                 </Tab.Screen>
             )}
         </Tab.Navigator>

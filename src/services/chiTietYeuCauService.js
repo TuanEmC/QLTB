@@ -24,18 +24,34 @@ export const getChiTietYeuCauWithDisplay = async (yeuCauId) => {
 
     // ===== Truy vấn các thiết bị liên quan =====
     const chiTietList = chiTietDocs.map(createChiTietYeuCau);
-    const thietBiIds = Array.from(new Set(chiTietList.map(c => c.thietBiId)));
+
+    const rawIds = chiTietList.map(c => c.thietBiId);
+    const idStrings = rawIds.map(String);
+    const idNumbers = rawIds
+        .map((id) => parseInt(id))
+        .filter((n) => !isNaN(n));
 
     const thietBiMap = {};
-    for (let i = 0; i < thietBiIds.length; i += 10) {
-        const batch = thietBiIds.slice(i, i + 10);
+
+    // Chia batch và query cả 2 kiểu vì dữ liệu cũ không khớp kiểu của id 
+    for (let i = 0; i < idStrings.length; i += 10) {
+        const batch = idStrings.slice(i, i + 10);
         const q = query(collection(db, 'thiet_bi'), where('id', 'in', batch));
         const snap = await getDocs(q);
         snap.docs.forEach(doc => {
             thietBiMap[String(doc.data().id)] = doc.data();
         });
-
     }
+
+    for (let i = 0; i < idNumbers.length; i += 10) {
+        const batch = idNumbers.slice(i, i + 10);
+        const q = query(collection(db, 'thiet_bi'), where('id', 'in', batch));
+        const snap = await getDocs(q);
+        snap.docs.forEach(doc => {
+            thietBiMap[String(doc.data().id)] = doc.data();
+        });
+    }
+
 
     // ===== Xử lý kết quả =====
     const result = [];

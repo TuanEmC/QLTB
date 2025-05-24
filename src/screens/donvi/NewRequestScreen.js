@@ -37,6 +37,10 @@ export default function NewRequestScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const routeYeuCauId = route.params?.yeuCauId;
+    const [isCreating, setIsCreating] = useState(false);
+    const [isLoadingChiTiet, setIsLoadingChiTiet] = useState(false);
+    const [chiTietError, setChiTietError] = useState(null);
+
 
     useEffect(() => {
         if (routeYeuCauId) {
@@ -47,18 +51,45 @@ export default function NewRequestScreen() {
     useEffect(() => {
         if (yeuCauId) {
             loadYeuCau(yeuCauId);
-            loadChiTietList(yeuCauId);
+
+            setIsLoadingChiTiet(true);
+            setChiTietError(null);
+            loadChiTietList(yeuCauId)
+                .catch((e) => {
+                    console.error('❌ Lỗi load chi tiết:', e);
+                    setChiTietError('Không thể tải danh sách chi tiết yêu cầu');
+                })
+                .finally(() => {
+                    setIsLoadingChiTiet(false);
+                });
+
             setShowDialog(false);
         }
     }, [yeuCauId]);
 
 
+    // const handleTaoYeuCau = async () => {
+    //     const id = await createNewYeuCau(currentUser.id, currentUser.donViId, moTa);
+    //     await loadYeuCau(id);
+    //     await loadChiTietList(id);
+    //     setShowDialog(false);
+    // };
     const handleTaoYeuCau = async () => {
-        const id = await createNewYeuCau(currentUser.id, currentUser.donViId, moTa);
-        await loadYeuCau(id);
-        await loadChiTietList(id);
-        setShowDialog(false);
+        if (isCreating) return;
+
+        setIsCreating(true);
+        try {
+            const id = await createNewYeuCau(currentUser.id, currentUser.donViId, moTa);
+            await loadYeuCau(id);
+            await loadChiTietList(id);
+            setShowDialog(false);
+        } catch (e) {
+            console.error('❌ Lỗi tạo yêu cầu:', e);
+        } finally {
+            setIsCreating(false);
+        }
     };
+
 
     const handleReload = () => {
         if (yeuCauId) {
@@ -86,29 +117,55 @@ export default function NewRequestScreen() {
 
 
 
-            {moTa && (
-                <Text style={styles.mota}>Mô tả: {yeuCau.moTa || 'Không có mô tả'}</Text>
-            )}
-
-            <FlatList
-                data={chiTietList}
-
-                keyExtractor={(item) => item.chiTiet.id.toString()}
-                renderItem={({ item }) => {
-                    //console.log('🧱 Chi tiết yêu cầu item:', item);
-                    return (
+            {isLoadingChiTiet ? (
+                <Text style={{
+                    marginTop: 12,
+                    fontSize: 16,
+                    fontWeight: '500',
+                    textAlign: 'center',
+                    color: '#555'
+                }}>
+                    🔄 Đang tải danh sách thiết bị...
+                </Text>
+            ) : chiTietError ? (
+                <Text style={{
+                    marginTop: 12,
+                    fontSize: 16,
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    color: 'red'
+                }}>
+                    ⚠️ {chiTietError}
+                </Text>
+            ) : (
+                <FlatList
+                    data={chiTietList}
+                    keyExtractor={(item) => item.chiTiet.id.toString()}
+                    renderItem={({ item }) => (
                         <RequestDeviceItem
                             item={item}
-                            onEdit={() => { }}
+                            onEdit={() => {
+                                navigation.navigate('ThietBiDetail', {
+                                    thietBiId: item.chiTiet.thietBiId,
+                                    yeuCauId: yeuCauId,
+                                    chiTietYeuCauId: item.chiTiet.id,
+                                });
+                            }}
                             onDelete={() => { }}
-                            onReview={() => { }}
+                            onReview={() => {
+                                navigation.navigate('ThietBiDetail', {
+                                    thietBiId: item.chiTiet.thietBiId,
+                                    yeuCauId: yeuCauId,
+                                    chiTietYeuCauId: item.chiTiet.id,
+                                });
+                            }}
                             isEditable={yeuCau?.trangThai === 'Bản Nháp'}
                         />
-                    );
-                }}
+                    )}
+                />
+            )}
 
 
-            />
 
             <View style={styles.buttonRow}>
                 <Button title="Thêm thiết bị" onPress={handleThemThietBi} />
@@ -129,7 +186,8 @@ export default function NewRequestScreen() {
                         />
                         <View style={styles.dialogActions}>
                             <Button title="Hủy" onPress={() => navigation.goBack()} />
-                            <Button title="Tạo yêu cầu" disabled={!moTa} onPress={handleTaoYeuCau} />
+                            <Button title="Tạo yêu cầu" disabled={!moTa || isCreating} onPress={handleTaoYeuCau} />
+
                         </View>
                     </View>
                 </View>
