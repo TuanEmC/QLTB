@@ -16,6 +16,8 @@ import RequestDeviceItem from '../../components/RequestDeviceItem';
 import { Ionicons } from '@expo/vector-icons';
 import { deleteChiTietYeuCauWithImages } from '../../services/chiTietYeuCauService';
 import { Alert } from 'react-native';
+import { TRANG_THAI_YEU_CAU } from '../../constants/trangThaiYeuCau';
+
 
 
 
@@ -43,6 +45,8 @@ export default function NewRequestScreen() {
     const [isLoadingChiTiet, setIsLoadingChiTiet] = useState(false);
     const [chiTietError, setChiTietError] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+
 
 
 
@@ -70,6 +74,12 @@ export default function NewRequestScreen() {
             setShowDialog(false);
         }
     }, [yeuCauId]);
+
+    useEffect(() => {
+        if (yeuCau?.moTa) {
+            setMoTa(yeuCau.moTa);
+        }
+    }, [yeuCau]);
 
 
     const handleTaoYeuCau = async () => {
@@ -141,6 +151,15 @@ export default function NewRequestScreen() {
 
 
 
+            {moTa ? (
+                <Text style={{ fontSize: 16, color: '#444', marginBottom: 8 }}>
+                    Mô tả: {moTa}
+                </Text>
+            ) : (
+                <Text style={{ fontSize: 14, color: '#888', fontStyle: 'italic', marginBottom: 8 }}>
+                    (Không có mô tả yêu cầu)
+                </Text>
+            )}
 
             <View style={{ flex: 1 }}>
                 {isLoadingChiTiet || isDeleting ? (
@@ -165,11 +184,18 @@ export default function NewRequestScreen() {
                             ⚠️ {chiTietError}
                         </Text>
                     </View>
+                ) : chiTietList.length === 0 ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Ionicons name="cube-outline" size={48} color="#bbb" />
+                        <Text style={{ fontSize: 16, color: '#777', marginTop: 8 }}>
+                            Chưa có thiết bị nào được thêm vào yêu cầu
+                        </Text>
+                    </View>
                 ) : (
                     <FlatList
                         data={chiTietList}
                         keyExtractor={(item) => item.chiTiet.id.toString()}
-                        contentContainerStyle={{ paddingBottom: 100 }} // tránh nút bị đè
+                        contentContainerStyle={{ paddingBottom: 100 }}
                         renderItem={({ item }) => (
                             <RequestDeviceItem
                                 item={item}
@@ -197,12 +223,60 @@ export default function NewRequestScreen() {
 
 
 
+            {yeuCau?.trangThai === TRANG_THAI_YEU_CAU.NHAP ? (
+                <View style={styles.buttonRow}>
+                    <Button
+                        title="Thêm thiết bị"
+                        onPress={handleThemThietBi}
+                        disabled={isSending}
+                    />
+                    <Button
+                        title={isSending ? "Đang gửi..." : "Gửi yêu cầu"}
+                        onPress={async () => {
+                            if (!chiTietList || chiTietList.length === 0) {
+                                Alert.alert('Chưa có thiết bị', 'Vui lòng thêm ít nhất một thiết bị trước khi gửi.');
+                                return;
+                            }
+
+                            setIsSending(true); // ⏳ Bắt đầu loading
+                            try {
+                                await capNhatTrangThai(TRANG_THAI_YEU_CAU.CHO_XAC_NHAN);
+                                // Gửi thông báo nếu có
+                                // await guiThongBaoChoAdmin(currentUser); (tuỳ bạn)
+
+                                // 🎯 Làm mới lại dữ liệu
+                                await loadYeuCau(yeuCauId);
+                                await loadChiTietList(yeuCauId);
+                            } catch (e) {
+                                console.error('❌ Lỗi khi gửi yêu cầu:', e);
+                                Alert.alert('Lỗi', 'Không thể gửi yêu cầu. Vui lòng thử lại.');
+                            } finally {
+                                setIsSending(false); // ✅ Kết thúc loading
+                            }
+                        }}
+
+                        disabled={isSending}
+                    />
+                </View>
+            ) : (
+                <View style={{ paddingVertical: 16 }}>
+                    <Text style={{ color: 'red', fontWeight: '600', textAlign: 'center' }}>
+                        Hiện không thể chỉnh sửa yêu cầu này.
+                    </Text>
+                </View>
+            )}
 
 
-            <View style={styles.buttonRow}>
+
+            {/* <View style={styles.buttonRow}>
                 <Button title="Thêm thiết bị" onPress={handleThemThietBi} />
-                <Button title="Gửi yêu cầu" disabled onPress={() => { }} />
-            </View>
+                <Button
+                    title="Gửi yêu cầu"
+                    
+
+                />
+
+            </View> */}
 
             <Modal visible={showDialog} transparent animationType="fade">
                 <View style={styles.dialogOverlay}>
