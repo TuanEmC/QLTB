@@ -153,7 +153,7 @@ export default function ChiTietYeuCauFormSection({ yeuCauId, thietBiId, chiTietY
 
         try {
             if (isExistingDetail) {
-                await updateChiTietYeuCauInFirestore(chiTietYeuCauId, {
+                await updateChiTietYeuCauInFirestore(String(chiTietYeuCauId), {
                     loaiYeuCau,
                     moTa,
                     images: selectedImages,
@@ -168,8 +168,17 @@ export default function ChiTietYeuCauFormSection({ yeuCauId, thietBiId, chiTietY
                 });
             }
 
-            onSuccess?.();         // callback gọi từ `ThietBiDetailScreen`
-            //navigation.goBack();
+            // onSuccess?.();         // callback gọi từ `ThietBiDetailScreen`
+            // navigation.navigate('NewRequest', { yeuCauId: item.id })
+            onSuccess?.();
+            navigation.reset({
+                index: 1,
+                routes: [
+                    { name: 'QLDVDanhSachYeuCau' },
+                    { name: 'NewRequest', params: { yeuCauId } },
+                ],
+            });
+
         } catch (e) {
             console.error('❌ Lỗi khi lưu chi tiết yêu cầu:', e);
             Alert.alert(
@@ -182,86 +191,6 @@ export default function ChiTietYeuCauFormSection({ yeuCauId, thietBiId, chiTietY
     };
 
 
-    // return (
-    //     <View style={[styles.container, { flex: 1 }]}>
-    //         <Text style={[styles.label, { color: colors.onSurface }]}>Loại yêu cầu</Text>
-
-    //         <TouchableOpacity
-    //             style={[styles.selectBox, { borderColor: colors.outlineVariant }]}
-    //             onPress={() => setShowLoaiSheet(true)}
-    //         >
-    //             <Text style={{ color: loaiYeuCau ? colors.onSurface : colors.onSurfaceVariant }}>
-    //                 {LOAI_YEU_CAU[loaiYeuCau] || 'Chọn loại yêu cầu'}
-    //             </Text>
-    //             <Ionicons name="chevron-down" size={18} color={colors.onSurfaceVariant} />
-    //         </TouchableOpacity>
-
-    //         <Text style={[styles.label, { color: colors.onSurface, marginTop: 16 }]}>Mô tả chi tiết</Text>
-    //         <TextInput
-    //             style={[styles.input, { borderColor: colors.outlineVariant, color: colors.onSurface }]}
-    //             multiline
-    //             numberOfLines={4}
-    //             placeholder="Nhập mô tả..."
-    //             placeholderTextColor={colors.onSurfaceVariant}
-    //             value={moTa}
-    //             onChangeText={setMoTa}
-    //         />
-
-    //         <View style={styles.imageActions}>
-    //             <Button title="Chọn ảnh" onPress={pickImage} />
-    //             <View style={{ width: 12 }} />
-    //             <Button title="Chụp ảnh" onPress={takePhoto} />
-    //         </View>
-
-    //         {selectedImages.length > 0 && (
-    //             <View style={styles.previewListWrapper}>
-    //                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    //                     {selectedImages.map((img, index) => (
-    //                         <View key={index} style={styles.previewItem}>
-    //                             <Image source={{ uri: img.uri }} style={styles.previewImage} />
-    //                             <TouchableOpacity
-    //                                 onPress={() => setSelectedImages(selectedImages.filter((_, i) => i !== index))}
-    //                                 style={styles.removeIcon}
-    //                             >
-    //                                 <Ionicons name="close-circle" size={20} color={colors.error} />
-    //                             </TouchableOpacity>
-    //                         </View>
-    //                     ))}
-    //                 </ScrollView>
-    //             </View>
-    //         )}
-
-    //         <View style={{ marginTop: 20 }}>
-    //             <Button
-    //                 title={isExistingDetail ? 'Cập nhật chi tiết yêu cầu' : 'Thêm thiết bị vào yêu cầu'}
-    //                 onPress={handleSave}
-    //                 disabled={!loaiYeuCau || !moTa.trim()}
-    //             />
-    //         </View>
-
-    //         <Modal visible={showLoaiSheet} animationType="slide" transparent onRequestClose={() => setShowLoaiSheet(false)}>
-    //             <View style={styles.sheetOverlay}>
-    //                 <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
-    //                     {Object.entries(LOAI_YEU_CAU).map(([key, label]) => (
-    //                         <TouchableOpacity
-    //                             key={key}
-    //                             style={styles.sheetItem}
-    //                             onPress={() => {
-    //                                 setLoaiYeuCau(key);
-    //                                 setShowLoaiSheet(false);
-    //                             }}
-    //                         >
-    //                             <Text style={{ color: colors.onSurface }}>{label}</Text>
-    //                         </TouchableOpacity>
-    //                     ))}
-    //                     <TouchableOpacity onPress={() => setShowLoaiSheet(false)}>
-    //                         <Text style={{ color: colors.primary, marginTop: 12 }}>Đóng</Text>
-    //                     </TouchableOpacity>
-    //                 </View>
-    //             </View>
-    //         </Modal>
-    //     </View>
-    // );
     if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

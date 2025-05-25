@@ -14,6 +14,8 @@ import { useSession } from '../../context/SessionContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import RequestDeviceItem from '../../components/RequestDeviceItem';
 import { Ionicons } from '@expo/vector-icons';
+import { deleteChiTietYeuCauWithImages } from '../../services/chiTietYeuCauService';
+import { Alert } from 'react-native';
 
 
 
@@ -40,6 +42,8 @@ export default function NewRequestScreen() {
     const [isCreating, setIsCreating] = useState(false);
     const [isLoadingChiTiet, setIsLoadingChiTiet] = useState(false);
     const [chiTietError, setChiTietError] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
 
 
     useEffect(() => {
@@ -68,12 +72,6 @@ export default function NewRequestScreen() {
     }, [yeuCauId]);
 
 
-    // const handleTaoYeuCau = async () => {
-    //     const id = await createNewYeuCau(currentUser.id, currentUser.donViId, moTa);
-    //     await loadYeuCau(id);
-    //     await loadChiTietList(id);
-    //     setShowDialog(false);
-    // };
     const handleTaoYeuCau = async () => {
         if (isCreating) return;
 
@@ -105,6 +103,33 @@ export default function NewRequestScreen() {
         }
     };
 
+    const handleDeleteChiTiet = (id) => {
+        Alert.alert(
+            'Xác nhận',
+            'Bạn có chắc muốn xóa chi tiết yêu cầu này?',
+            [
+                { text: 'Huỷ' },
+                {
+                    text: 'Xoá',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeleting(true);
+                        try {
+                            await deleteChiTietYeuCauWithImages(id);
+                            await loadChiTietList(yeuCauId); // ✅ cập nhật lại danh sách sau khi xóa
+                        } catch (e) {
+                            console.error('❌ Lỗi khi xóa chi tiết:', e);
+                        } finally {
+                            setIsDeleting(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+
+
     return (
         <View style={styles.container}>
             <View style={styles.titleRow}>
@@ -117,53 +142,60 @@ export default function NewRequestScreen() {
 
 
 
-            {isLoadingChiTiet ? (
-                <Text style={{
-                    marginTop: 12,
-                    fontSize: 16,
-                    fontWeight: '500',
-                    textAlign: 'center',
-                    color: '#555'
-                }}>
-                    🔄 Đang tải danh sách thiết bị...
-                </Text>
-            ) : chiTietError ? (
-                <Text style={{
-                    marginTop: 12,
-                    fontSize: 16,
-                    fontWeight: '600',
-                    textAlign: 'center',
-                    color: 'red'
-                }}>
-                    ⚠️ {chiTietError}
-                </Text>
-            ) : (
-                <FlatList
-                    data={chiTietList}
-                    keyExtractor={(item) => item.chiTiet.id.toString()}
-                    renderItem={({ item }) => (
-                        <RequestDeviceItem
-                            item={item}
-                            onEdit={() => {
-                                navigation.navigate('ThietBiDetail', {
-                                    thietBiId: item.chiTiet.thietBiId,
-                                    yeuCauId: yeuCauId,
-                                    chiTietYeuCauId: item.chiTiet.id,
-                                });
-                            }}
-                            onDelete={() => { }}
-                            onReview={() => {
-                                navigation.navigate('ThietBiDetail', {
-                                    thietBiId: item.chiTiet.thietBiId,
-                                    yeuCauId: yeuCauId,
-                                    chiTietYeuCauId: item.chiTiet.id,
-                                });
-                            }}
-                            isEditable={yeuCau?.trangThai === 'Bản Nháp'}
-                        />
-                    )}
-                />
-            )}
+            <View style={{ flex: 1 }}>
+                {isLoadingChiTiet || isDeleting ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '500',
+                            textAlign: 'center',
+                            color: isDeleting ? 'red' : '#555',
+                        }}>
+                            {isDeleting ? '🗑 Đang xóa chi tiết thiết bị...' : '🔄 Đang tải danh sách thiết bị...'}
+                        </Text>
+                    </View>
+                ) : chiTietError ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: '600',
+                            textAlign: 'center',
+                            color: 'red'
+                        }}>
+                            ⚠️ {chiTietError}
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={chiTietList}
+                        keyExtractor={(item) => item.chiTiet.id.toString()}
+                        contentContainerStyle={{ paddingBottom: 100 }} // tránh nút bị đè
+                        renderItem={({ item }) => (
+                            <RequestDeviceItem
+                                item={item}
+                                onEdit={() => {
+                                    navigation.navigate('ThietBiDetail', {
+                                        thietBiId: item.chiTiet.thietBiId,
+                                        yeuCauId,
+                                        chiTietYeuCauId: item.chiTiet.id,
+                                    });
+                                }}
+                                onDelete={() => handleDeleteChiTiet(item.chiTiet.id)}
+                                onReview={() => {
+                                    navigation.navigate('ThietBiDetail', {
+                                        thietBiId: item.chiTiet.thietBiId,
+                                        yeuCauId,
+                                        chiTietYeuCauId: item.chiTiet.id,
+                                    });
+                                }}
+                                isEditable={yeuCau?.trangThai === 'Bản Nháp'}
+                            />
+                        )}
+                    />
+                )}
+            </View>
+
+
 
 
 

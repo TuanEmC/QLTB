@@ -7,6 +7,8 @@ import { getThietBiWithChiTietDisplay } from '../../services/thietBiService';
 import useAppTheme from '../../hooks/useAppTheme';
 import ChiTietYeuCauFormSection from '../../components/ChiTietYeuCauFormSection';
 import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native';
+
 
 
 const Tab = createMaterialTopTabNavigator();
@@ -35,7 +37,8 @@ function FormThemChiTietTab({ thietBi, yeuCauId, chiTietYeuCauId }) {
                 chiTietYeuCauId={chiTietYeuCauId}
                 onSuccess={() => {
                     console.log('✅ Đã lưu xong chi tiết yêu cầu');
-                    navigation.goBack();
+                    navigation.navigate('NewRequest', { yeuCauId: yeuCauId });
+                    // navigation.pop();
                 }}
             />
         </View>
@@ -57,8 +60,14 @@ export default function ThietBiDetailScreen() {
     }, [thietBiId]);
 
     if (!thietBi) {
-        return <Text>Đang tải dữ liệu...</Text>;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={{ marginTop: 12, color: colors.onSurface }}>Đang tải thông tin thiết bị...</Text>
+            </View>
+        );
     }
+
 
     return (
         <Tab.Navigator
