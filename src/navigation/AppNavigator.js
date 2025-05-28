@@ -23,6 +23,8 @@ import NewRequestScreen from '../screens/donvi/NewRequestScreen';
 import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
 import PhongListScreen from '../screens/donvi/PhongListScreen';
 import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
+import SplashScreen from '../screens/common/SplashScreen';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -69,13 +71,14 @@ export default function AppNavigator() {
 
   return (
     <Stack.Navigator
-      initialRouteName="MainDrawer"
+      initialRouteName="Splash"
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.onPrimary,
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
+      <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
       <Stack.Screen name="MainDrawer" component={MainDrawer} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
