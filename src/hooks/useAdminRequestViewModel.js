@@ -20,6 +20,15 @@ export default function useAdminRequestViewModel() {
         donViId: null,
     });
 
+    const applySortOrder = (order) => {
+        console.log('🔃 Sắp xếp theo:', order);
+        setSortOrder(order);
+    };
+
+
+    const [sortOrder, setSortOrder] = useState('desc'); // 'desc' | 'asc'
+
+
     const [isLoading, setIsLoading] = useState(false);
 
     const loadData = async () => {
@@ -54,15 +63,22 @@ export default function useAdminRequestViewModel() {
     }, []);
 
     useEffect(() => {
-        const filtered = originalYeuCauList.filter((item) => {
-            const matchTrangThai = !filters.trangThai || item.trangThai === filters.trangThai;
-            const matchDonVi = !filters.donViId || item.donViId === Number(filters.donViId);
-            return matchTrangThai && matchDonVi;
-        });
+        const filtered = originalYeuCauList
+            .filter((item) => {
+                const matchTrangThai = !filters.trangThai || item.trangThai === filters.trangThai;
+                const matchDonVi = !filters.donViId || item.donViId === Number(filters.donViId);
+                return matchTrangThai && matchDonVi;
+            })
+            .sort((a, b) => {
+                const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return sortOrder === 'desc' ? tB - tA : tA - tB;
+            });
 
-        console.log('🔍 Áp dụng filter:', filters, `(${filtered.length} kết quả)`);
+        console.log('🔍 Áp dụng filter + sort:', filters, `(${filtered.length} kết quả)`);
         setFilteredList(filtered);
-    }, [originalYeuCauList, filters]);
+    }, [originalYeuCauList, filters, sortOrder]);
+
 
     const normalize = (str) => str?.toLowerCase().trim();
 
@@ -104,6 +120,7 @@ export default function useAdminRequestViewModel() {
         phanCongCountMap,
         isLoading,
         refresh: loadData,
+        applySortOrder,
     };
 }
 
