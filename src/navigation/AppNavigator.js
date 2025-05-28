@@ -22,6 +22,7 @@ import DeviceListScreen from '../screens/donvi/DeviceListScreen';
 import NewRequestScreen from '../screens/donvi/NewRequestScreen';
 import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
 import PhongListScreen from '../screens/donvi/PhongListScreen';
+import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -88,6 +89,11 @@ export default function AppNavigator() {
       <Stack.Screen name="NewRequest" component={NewRequestScreen} />
       <Stack.Screen name="ThietBiDetail" component={ThietBiDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
       <Stack.Screen name="PhongList" component={PhongListScreen} />
+      <Stack.Screen
+        name="AdminRequestList"
+        component={AdminRequestListScreen}
+        options={{ title: 'DS Yêu cầu' }}
+      />
       {/* <Stack.Screen name="ThietBiTheoPhong" component={ThietBiTheoPhongScreen} /> */}
 
     </Stack.Navigator>
