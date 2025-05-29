@@ -17,6 +17,8 @@ export const defaultPhanCongKtv = {
   thoiGianLamViecThucTe: 0,
   trangThaiCuoiCung: '',
   thoiGianLamViecThucTe: 0,
+  anh_minh_chung_lam_viec: [],
+  anh_minh_chung_bao_cao: [],
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };

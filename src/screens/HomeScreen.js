@@ -1,90 +1,134 @@
-import React from 'react';
-import { View, Button, StyleSheet, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import AppLayout from '../components/layout/AppLayout';
-import { normalizeCollection } from '../services/normalizeTools';
 import { useSession } from '../context/SessionContext';
 import { useNavigation } from '@react-navigation/native';
-
-import {
-  defaultYeuCau,
-  defaultTaiKhoan,
-  defaultThietBi,
-  defaultPhanCong,
-  defaultPhanCongKtv,
-  defaultKyThuatVien,
-  defaultVaiTro,
-  defaultDonVi,
-  defaultTang,
-  defaultDay,
-  defaultPhong,
-  defaultLoaiPhong,
-  defaultLoaiThietBi,
-  defaultChuyenMon,
-  defaultChuyenMonKtv,
-  defaultBaiViet,
-  defaultBienBanYeuCau,
-  defaultChiTietYeuCau,
-  defaultAnhMinhChungBaoCao,
-  defaultAnhMinhChungLamViec,
-  defaultDanhGiaKtv,
-  defaultThongBao
-} from '../models';
-
-const allCollections = [
-  { name: 'yeu_cau', model: defaultYeuCau },
-  { name: 'tai_khoan', model: defaultTaiKhoan },
-  { name: 'thiet_bi', model: defaultThietBi },
-  { name: 'phan_cong', model: defaultPhanCong },
-  { name: 'phan_cong_ktv', model: defaultPhanCongKtv },
-  { name: 'ky_thuat_vien', model: defaultKyThuatVien },
-  { name: 'vai_tro', model: defaultVaiTro },
-  { name: 'don_vi', model: defaultDonVi },
-  { name: 'tang', model: defaultTang },
-  { name: 'day', model: defaultDay },
-  { name: 'phong', model: defaultPhong },
-  { name: 'loai_phong', model: defaultLoaiPhong },
-  { name: 'loai_thiet_bi', model: defaultLoaiThietBi },
-  { name: 'chuyen_mon', model: defaultChuyenMon },
-  { name: 'chuyen_mon_ktv', model: defaultChuyenMonKtv },
-  { name: 'bai_viet', model: defaultBaiViet },
-  { name: 'bien_ban_yeu_cau', model: defaultBienBanYeuCau },
-  { name: 'chi_tiet_yeu_cau', model: defaultChiTietYeuCau },
-  { name: 'anh_minh_chung_bao_cao', model: defaultAnhMinhChungBaoCao },
-  { name: 'anh_minh_chung_lam_viec', model: defaultAnhMinhChungLamViec },
-  { name: 'danh_gia_ktv', model: defaultDanhGiaKtv },
-  { name: 'thong_bao', model: defaultThongBao },
-];
-
-const handleNormalizeAll = async () => {
-  for (const item of allCollections) {
-    //console.log(`📌 Chuẩn hóa ${item.name}`);
-    await normalizeCollection(item.name, item.model);
-  }
-  setTimeout(() => {
-    alert('✅ Đã chuẩn hóa toàn bộ Firestore!');
-  }, 100);
-
-};
-
-
+import useAppTheme from '../hooks/useAppTheme';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
+import { Card, Title, Paragraph, FAB } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { currentUser } = useSession();
   const navigation = useNavigation();
+  const { colors } = useAppTheme();
+  const [articles, setArticles] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchArticles = async () => {
+    try {
+      const articlesRef = collection(db, 'bai_viet');
+      const q = query(articlesRef, orderBy('thoiGianTao', 'desc'), limit(5));
+      const querySnapshot = await getDocs(q);
+      const articlesList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setArticles(articlesList);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchArticles();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    onRefresh();
+  }, []);
 
   return (
     <AppLayout showBottomBar={true}>
-      <View style={styles.container}>
-        <Text style={{ marginBottom: 12, fontSize: 16 }}>
-          {currentUser
-            ? `Xin chào, ${currentUser.tenTaiKhoan}`
-            : 'Bạn chưa đăng nhập'}
-        </Text>
-      </View>
+      <ScrollView 
+        style={[styles.container, { backgroundColor: colors.background }]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.header}>
+          <Text style={[styles.welcomeText, { color: colors.onSurface }]}>
+            {currentUser ? `Xin chào, ${currentUser.tenTaiKhoan}` : 'Bạn chưa đăng nhập'}
+          </Text>
+          {currentUser?.vaiTroId === 1 && (
+            <TouchableOpacity 
+              style={[styles.adminButton, { backgroundColor: colors.primary }]}
+              onPress={() => navigation.navigate('AdminDashboard')}
+            >
+              <MaterialCommunityIcons name="view-dashboard" size={24} color="white" />
+              <Text style={styles.adminButtonText}>Bảng điều khiển</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.newsContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Tin tức mới nhất</Text>
+          {articles.map((article) => (
+            <TouchableOpacity 
+              key={article.id}
+              onPress={() => navigation.navigate('ArticleDetail', { article })}
+            >
+              <Card style={[styles.articleCard, { backgroundColor: colors.surface }]}>
+                {article.anhDaiDien && (
+                  <Card.Cover source={{ uri: article.anhDaiDien }} style={styles.articleImage} />
+                )}
+                <Card.Content>
+                  <Title style={{ color: colors.onSurface }}>{article.tieuDe}</Title>
+                  <Paragraph style={{ color: colors.onSurface }} numberOfLines={2}>
+                    {article.moTa}
+                  </Paragraph>
+                </Card.Content>
+              </Card>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </AppLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  adminButtonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  newsContainer: {
+    padding: 16,
+  },
+  articleCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  articleImage: {
+    height: 200,
+  },
 });

@@ -21,6 +21,11 @@ import TestBottomSheetScreen from '../screens/debug/TestBottomSheetScreen';
 import DeviceListScreen from '../screens/donvi/DeviceListScreen';
 import NewRequestScreen from '../screens/donvi/NewRequestScreen';
 import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
+import EditExpertise from '../screens/EditExpertise';
+import TaskList from '../screens/dashboard/TaskList';
+import TaskBoard from '../screens/dashboard/TaskBoard';
+import Specializations from '../screens/dashboard/Specializations';
+import TaskDetail from '../screens/dashboard/TaskDetail';
 
 
 const Stack = createNativeStackNavigator();
@@ -86,6 +91,11 @@ export default function AppNavigator() {
       <Stack.Screen name="DeviceList" component={DeviceListScreen} />
       <Stack.Screen name="NewRequest" component={NewRequestScreen} />
       <Stack.Screen name="ThietBiDetail" component={ThietBiDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
+      <Stack.Screen name="EditExpertise" component={EditExpertise} options={{ title: 'Chỉnh sửa chuyên môn' }} />
+      <Stack.Screen name="TaskList" component={TaskList} options={{ title: 'Danh sách công việc' }} />
+      <Stack.Screen name="TaskBoard" component={TaskBoard} options={{ title: 'Bảng công việc' }} />
+      <Stack.Screen name="Specializations" component={Specializations} options={{ title: 'Chuyên môn' }} />
+      <Stack.Screen name="TaskDetail" component={TaskDetail} options={{ title: 'Chi tiết công việc' }} />
     </Stack.Navigator>
   );
 }
