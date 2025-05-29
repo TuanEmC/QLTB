@@ -215,11 +215,12 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, FlatList, Image, Modal, TextInput, Button } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import useAdminRequestDetailViewModel from '../../hooks/useAdminRequestDetailViewModel';
 import { Ionicons } from '@expo/vector-icons';
 import { TRANG_THAI_YEU_CAU } from '../../constants/trangThaiYeuCau';
+
 
 export default function AdminRequestDetailScreen() {
     const route = useRoute();
@@ -236,6 +237,9 @@ export default function AdminRequestDetailScreen() {
     } = useAdminRequestDetailViewModel(yeuCauId);
 
     const [tab, setTab] = useState('chua');
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
+
 
     useEffect(() => {
         reload();
@@ -280,6 +284,15 @@ export default function AdminRequestDetailScreen() {
         );
     };
 
+    const handleRejectConfirm = () => {
+        if (!rejectReason.trim()) return;
+        tuChoiYeuCau(rejectReason.trim());
+        setShowRejectDialog(false);
+        setRejectReason('');
+    };
+
+
+
     return (
         <View style={styles.container}>
             {yeuCau.trangThai === TRANG_THAI_YEU_CAU.CHO_XAC_NHAN ? (
@@ -295,9 +308,10 @@ export default function AdminRequestDetailScreen() {
                         />
                     </View>
                     <View style={styles.footerRow}>
-                        <TouchableOpacity onPress={() => tuChoiYeuCau('Không hợp lệ')} style={styles.rejectButton}>
+                        <TouchableOpacity onPress={() => setShowRejectDialog(true)} style={styles.rejectButton}>
                             <Text style={styles.actionText}>Từ chối</Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity onPress={duyetYeuCau} style={styles.acceptButton}>
                             <Text style={styles.actionText}>Duyệt</Text>
                         </TouchableOpacity>
@@ -324,31 +338,110 @@ export default function AdminRequestDetailScreen() {
                     />
                 </>
             )}
+
+            <Modal visible={showRejectDialog} transparent animationType="fade">
+                <View style={styles.modalWrapper}>
+                    <View style={styles.dialogContent}>
+                        <Text style={styles.dialogTitle}>Nhập lý do từ chối</Text>
+                        <TextInput
+                            value={rejectReason}
+                            onChangeText={setRejectReason}
+                            placeholder="Nhập lý do..."
+                            style={styles.input}
+                            multiline
+                        />
+                        <View style={styles.dialogActions}>
+                            <TouchableOpacity onPress={() => setShowRejectDialog(false)} style={styles.dialogButton}>
+                                <Text style={styles.dialogButtonText}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleRejectConfirm} style={[styles.dialogButton, { backgroundColor: '#2e7d32' }]} disabled={!rejectReason.trim()}>
+                                <Text style={styles.dialogButtonText}>Xác nhận</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+
         </View>
+
+
     );
 
 
 }
 
 const styles = StyleSheet.create({
+    modalWrapper: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dialogContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 12,
+        width: '85%',
+        elevation: 5,
+    },
+    dialogTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 10,
+        minHeight: 80,
+        textAlignVertical: 'top',
+        marginBottom: 12,
+    },
+    dialogActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    dialogButton: {
+        flex: 1,
+        backgroundColor: '#c62828',
+        paddingVertical: 12,
+        marginHorizontal: 4,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    dialogButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+
+
+
     listContainer: {
         flex: 1,
     },
 
     footerRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingHorizontal: 20,
         paddingVertical: 12,
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderColor: '#ddd',
-        elevation: 4, // tạo đổ bóng
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: -2 },
+        gap: 12,
     },
+
+
+    dialogActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 12,
+        gap: 12,
+    },
+
 
 
     acceptButton: {
@@ -389,9 +482,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f6fa' },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     actionRow: { flexDirection: 'row', justifyContent: 'space-around', padding: 16 },
-    acceptButton: { backgroundColor: 'green', padding: 12, borderRadius: 8 },
-    rejectButton: { backgroundColor: 'red', padding: 12, borderRadius: 8 },
-    actionText: { color: '#fff', fontWeight: 'bold' },
+
     tabRow: {
         flexDirection: 'row',
         justifyContent: 'center',

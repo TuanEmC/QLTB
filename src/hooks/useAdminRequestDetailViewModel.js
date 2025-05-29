@@ -64,12 +64,15 @@
 // }
 
 import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+
 import {
-    getDoc, doc, collection, getDocs, query, where
+    getDoc, doc, collection, getDocs, query, where, updateDoc,
 } from 'firebase/firestore';
 import { db } from '../services/firebaseConfig';
 import { defaultYeuCau } from '../models/yeuCauModel';
 import { TRANG_THAI_PHAN_CONG } from '../constants/trangThaiPhanCong';
+import { TRANG_THAI_YEU_CAU } from '../constants/trangThaiYeuCau';
 
 export default function useAdminRequestDetailViewModel(yeuCauId) {
     console.log('🔥 useAdminRequestDetailViewModel khởi tạo với yeuCauId:', yeuCauId);
@@ -189,13 +192,45 @@ export default function useAdminRequestDetailViewModel(yeuCauId) {
         }
     };
 
-    const duyetYeuCau = () => {
-        console.log('✅ Gọi hàm duyệt yêu cầu cho:', yeuCauId);
+    // const duyetYeuCau = () => {
+    //     console.log('✅ Gọi hàm duyệt yêu cầu cho:', yeuCauId);
+    // };
+
+    // const tuChoiYeuCau = (reason) => {
+    //     console.log('❌ Từ chối yêu cầu với lý do:', reason);
+    // };
+
+    const duyetYeuCau = async () => {
+        try {
+            await updateDoc(doc(db, 'yeu_cau', String(yeuCauId)), {
+                trangThai: TRANG_THAI_YEU_CAU.DA_XAC_NHAN,
+                updatedAt: Date.now(),
+            });
+            console.log('✅ Đã duyệt yêu cầu');
+            Alert.alert('Thành công', 'Yêu cầu đã được duyệt');
+            reload();
+        } catch (e) {
+            console.error('❌ Lỗi duyệt yêu cầu:', e);
+            Alert.alert('Lỗi', 'Không thể duyệt yêu cầu');
+        }
     };
 
-    const tuChoiYeuCau = (reason) => {
-        console.log('❌ Từ chối yêu cầu với lý do:', reason);
+    const tuChoiYeuCau = async (lyDo) => {
+        try {
+            await updateDoc(doc(db, 'yeu_cau', String(yeuCauId)), {
+                trangThai: TRANG_THAI_YEU_CAU.TU_CHOI,
+                lyDoTuChoi: lyDo,
+                updatedAt: Date.now(),
+            });
+            console.log('❌ Đã từ chối yêu cầu');
+            Alert.alert('Thành công', 'Yêu cầu đã bị từ chối');
+            reload();
+        } catch (e) {
+            console.error('❌ Lỗi từ chối yêu cầu:', e);
+            Alert.alert('Lỗi', 'Không thể từ chối yêu cầu');
+        }
     };
+
 
     return {
         yeuCau,
