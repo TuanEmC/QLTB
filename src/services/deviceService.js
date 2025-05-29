@@ -62,3 +62,37 @@ export const getDevicesByDonVi = async (donViId) => {
         };
     });
 };
+
+
+export const getAllDevicesForAdmin = async () => {
+    const phongSnap = await getDocs(collection(db, 'phong'));
+    const phongMap = {};
+    phongSnap.docs.forEach(doc => {
+        const phong = createPhong(doc);
+        phongMap[phong.id] = phong;
+    });
+
+    const tbSnap = await getDocs(collection(db, 'thiet_bi'));
+    const thietBiList = tbSnap.docs.map(doc => createThietBi(doc));
+
+    const loaiSnap = await getDocs(collection(db, 'loai_thiet_bi'));
+    const loaiMap = {};
+    loaiSnap.docs.forEach(doc => {
+        const loai = createLoaiThietBi(doc);
+        loaiMap[loai.id] = loai;
+    });
+
+    return thietBiList.map(tb => {
+        const phong = phongMap[tb.phongId] || {};
+        const loai = loaiMap[tb.loaiThietBiId] || {};
+        return {
+            id: tb.id,
+            tenThietBi: tb.tenThietBi,
+            trangThai: tb.trangThai,
+            tenLoai: loai.tenLoai || '',
+            tenPhong: phong.tenPhong || '',
+            tenDay: phong.tenDay || '',
+            tenTang: phong.tenTang || '',
+        };
+    });
+};

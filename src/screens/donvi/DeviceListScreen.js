@@ -14,6 +14,7 @@ import DeviceCardInGrid from '../../components/DeviceCardInGrid';
 import useDeviceListViewModel from '../../hooks/useDeviceListViewModel';
 import { useSession } from '../../context/SessionContext';
 import { ActivityIndicator } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 
 const FILTER_KEYS = ['Phòng', 'Trạng thái', 'Loại thiết bị'];
@@ -22,8 +23,14 @@ const FILTER_KEYS = ['Phòng', 'Trạng thái', 'Loại thiết bị'];
 export default function DeviceListScreen({ route }) {
     const { currentUser } = useSession();
     const { isSelectMode = false, yeuCauId = null } = route.params || {};
+    // const donViId = currentUser?.donViId;
+    // const { devices, filters, setFilters, resetFilters } = useDeviceListViewModel(donViId);
+    const isAdmin = currentUser.vaiTroId === 1;
     const donViId = currentUser?.donViId;
-    const { devices, filters, setFilters, resetFilters } = useDeviceListViewModel(donViId);
+    const { devices, filters, setFilters, resetFilters } = useDeviceListViewModel({ isAdmin, donViId });
+    console.log('📌 isAdmin:', isAdmin, 'donViId:', donViId);
+
+
     const [selectedDevices, setSelectedDevices] = useState([]);
     const [currentFilterKey, setCurrentFilterKey] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -37,13 +44,28 @@ export default function DeviceListScreen({ route }) {
         setIsLoading(devices.length === 0);
     }, [devices]);
 
+    // useEffect(() => {
+    //     if (currentFilterKey) {
+    //         const values = Array.from(new Set(devices.map(d => getValueByKey(d, currentFilterKey))));
+    //         setFilterValues(values);
+    //         setModalVisible(true);
+    //     }
+    // }, [currentFilterKey]);
+
     useEffect(() => {
         if (currentFilterKey) {
             const values = Array.from(new Set(devices.map(d => getValueByKey(d, currentFilterKey))));
             setFilterValues(values);
-            setModalVisible(true);
         }
     }, [currentFilterKey]);
+
+
+    useEffect(() => {
+        if (filterValues.length > 0) {
+            setModalVisible(true);
+        }
+    }, [filterValues]);
+
 
     const handleFilterSelect = (key, value) => {
         setFilters(prev => ({ ...prev, [mapKey(key)]: value }));
@@ -112,14 +134,17 @@ export default function DeviceListScreen({ route }) {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Chọn {currentFilterKey}</Text>
-                        {filterValues.map(value => (
-                            <Pressable
-                                key={value}
-                                style={styles.modalItem}
-                                onPress={() => handleFilterSelect(currentFilterKey, value)}>
-                                <Text>{value}</Text>
-                            </Pressable>
-                        ))}
+                        <ScrollView>
+                            {filterValues.map(value => (
+                                <Pressable
+                                    key={value}
+                                    style={styles.modalItem}
+                                    onPress={() => handleFilterSelect(currentFilterKey, value)}>
+                                    <Text>{value}</Text>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+
                         <Pressable onPress={() => setModalVisible(false)} style={styles.modalClose}>
                             <Text>Đóng</Text>
                         </Pressable>
@@ -156,7 +181,14 @@ const styles = StyleSheet.create({
     row: { justifyContent: 'space-between' },
     listContent: { paddingHorizontal: 8, paddingBottom: 20 },
     modalContainer: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
-    modalContent: { backgroundColor: 'white', padding: 20, borderTopLeftRadius: 12, borderTopRightRadius: 12 },
+    modalContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        maxHeight: '60%',  // Giới hạn chiều cao modal
+    },
+
     modalTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 10 },
     modalItem: { paddingVertical: 10 },
     modalClose: { marginTop: 10, alignSelf: 'flex-end' },

@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const options = [
     { title: 'Tổng quan yêu cầu', icon: 'reader-outline', route: 'AdminRequestList' },
-    // { title: 'Tổng quan thiết bị', icon: 'hardware-chip-outline', route: 'AdminDeviceList' },
+    { title: 'Tổng quan thiết bị', icon: 'hardware-chip-outline', route: 'DeviceList' },
     // { title: 'Tra cứu nhanh TB', icon: 'qr-code-outline', route: 'ScanQR' },
     // { title: 'Danh sách KTV', icon: 'people-outline', route: 'DanhSachKyThuatVien' },
     // { title: 'Quản lý tài khoản', icon: 'person-circle-outline', route: 'AdminAccount' },
