@@ -24,6 +24,8 @@ import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
 import PhongListScreen from '../screens/donvi/PhongListScreen';
 import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
 import SplashScreen from '../screens/common/SplashScreen';
+import AdminRequestDetailScreen from '../screens/admin/AdminRequestDetailScreen';
+
 
 
 
@@ -97,6 +99,12 @@ export default function AppNavigator() {
         component={AdminRequestListScreen}
         options={{ title: 'DS Yêu cầu' }}
       />
+      <Stack.Screen
+        name="AdminRequestDetail"
+        component={AdminRequestDetailScreen}
+        options={{ title: 'Chi tiết yêu cầu' }}
+      />
+
       {/* <Stack.Screen name="ThietBiTheoPhong" component={ThietBiTheoPhongScreen} /> */}
 
     </Stack.Navigator>

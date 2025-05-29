@@ -205,7 +205,7 @@ export default function AdminRequestListScreen() {
         return (
             <TouchableOpacity
                 style={[styles.card, { backgroundColor: colors.surface }]}
-                onPress={() => navigation.navigate('AdminRequestDetail', { id: item.id })}
+                onPress={() => navigation.push('AdminRequestDetail', { yeuCauId: item.id })}
             >
                 {/* Header xanh đậm */}
                 <View style={[styles.cardHeader, { backgroundColor: colors.primaryContainer }]}>
