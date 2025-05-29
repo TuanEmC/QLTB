@@ -211,7 +211,7 @@ export default function AdminRequestListScreen() {
                 <View style={[styles.cardHeader, { backgroundColor: colors.primaryContainer }]}>
                     <View style={styles.headerLeft}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                            <Ionicons name="person" size={14} color={colors.onPrimaryContainer} />
+                            <Ionicons name="document-text" size={14} color={colors.onPrimaryContainer} />
                             <Text style={{ marginLeft: 4, color: colors.onPrimaryContainer, fontWeight: '500' }}>
                                 {daPhanCong}/{tongChiTiet}
                             </Text>
