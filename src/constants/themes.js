@@ -35,6 +35,9 @@ export const lightTheme = {
     // Outline
     outline: '#737781',
     outlineVariant: '#C3C6D1',
+    warning: '#FF8C00',    // cam đậm hơn, dễ nhìn, nổi bật nhưng không chói
+    info: '#1976D2',       // xanh dương đậm, dịu mắt, chuẩn màu info thường dùng
+    success: '#388E3C',    // xanh lá đậm, biểu thị thành công rõ ràng, dễ nhìn
   };
   
   // Dark Mode Theme
@@ -68,5 +71,8 @@ export const lightTheme = {
   
     outline: '#8E909A',
     outlineVariant: '#3E3F48',
+    warning: '#FFA726',    // cam sáng hơn, dễ nhận biết trên nền tối
+    info: '#64B5F6',       // xanh dương sáng, dễ thấy trên nền tối
+    success: '#81C784',    // xanh lá sáng, tươi tắn, dễ nhận diện
   };
   

@@ -105,25 +105,23 @@ export default function TaskList() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Chờ Phản Hồi':
-        return colors.warning; // Việc mới
-      case 'Đang Thực Hiện':
-        return colors.info; // Đang làm
-      case 'Tạm Nghỉ':
-         return colors.info; // Tạm nghỉ (nhóm vào Đang làm)
-      case 'Đã Chấp Nhận':
-        return colors.info; // Đã chấp nhận (nhóm vào Đang làm)
-      case 'Hoàn Thành':
-        return colors.success; // Đã hoàn thành
-      case 'Bị Hủy':
-        return colors.error; // Bị hủy
-      case 'Đã Từ Chối':
-         return colors.error; // Đã từ chối (nhóm vào Bị hủy)
-      default:
-        return colors.onSurfaceVariant;
-    }
+    // const normalized = status.trim().toLowerCase();
+    console.log('Colors:', colors);
+    
+    if (typeof status !== 'string') return 'purple';
+  const normalized = status.trim().toLowerCase();
+  console.log('Normalized trạng thái:', normalized);
+    if (normalized.includes('phản hồi')) return colors.warning;
+    if (normalized.includes('đang thực hiện')) return colors.info;
+    if (normalized.includes('tạm nghỉ')) return colors.warning;
+    if (normalized.includes('chấp nhận')) return colors.success;
+    if (normalized.includes('hoàn thành')) return colors.info;
+    if (normalized.includes('hủy')) return colors.error;
+    if (normalized.includes('từ chối')) return colors.error;
+  
+    return 'purple'; // Mặc định
   };
+  
 
   // Map display status to actual status values or groups
   const statusFilterMap = {
@@ -161,6 +159,7 @@ export default function TaskList() {
   };
 
   const renderTaskCard = (task) => {
+    console.log('Trạng thái công việc:', task.trangThai);
     const getTaskTypeIcon = (loai) => {
       switch (loai) {
         case 'Sửa Chữa':
@@ -241,6 +240,8 @@ export default function TaskList() {
           {/* Row 1: Task Type and Status Chip */}
           <View style={styles.rowBetween}>
             <View style={styles.taskTypeContainer}>
+              {/* Status Indicator Dot */}
+              <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
               <MaterialCommunityIcons name={getTaskTypeIcon(task.phanCong.loaiPhanCong)} size={20} color={colors.primary} />
               <Text style={[styles.taskType, { color: colors.primary, fontWeight: 'bold' }]}>
                 {task.phanCong.loaiPhanCong}
@@ -254,7 +255,7 @@ export default function TaskList() {
               paddingHorizontal: 8,
               paddingVertical: 4,
             }]}>
-              <Text style={{ color: colors.onPrimary, fontSize: 12, fontWeight: 'bold' }}>
+              <Text style={{ color: colors.onSurface, fontSize: 12, fontWeight: 'bold' }}>
                 {displayStatus(task.trangThai)}
               </Text>
             </View>
@@ -432,7 +433,7 @@ export default function TaskList() {
   };
 
   return (
-    <AppLayout showBottomBar={true}>
+    <AppLayout showBottomBar={false}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Filter container with Searchbar and Sort Chips */}
         <View style={styles.filterContainer}> 
@@ -790,5 +791,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'nowrap',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
   },
 });

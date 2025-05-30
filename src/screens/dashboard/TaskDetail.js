@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view'; // Added TabBar
 import { useSession } from '../../context/SessionContext';
+import WorkProgress from './WorkProgress';
 
 const initialLayout = { width: Dimensions.get('window').width };
 
@@ -54,6 +55,7 @@ export default function TaskDetail() {
     { key: 'thietbi', title: 'Thiết bị' },
     { key: 'minhchung', title: 'Minh chứng' },
     { key: 'ktvthamgia', title: 'KTV tham gia' },
+    { key: 'tieptrinh', title: 'Tiến trình' },
   ]);
 
   // State for task response
@@ -310,7 +312,7 @@ export default function TaskDetail() {
                 });
             }
             return isValid;
-        });
+      });
 
         // Sort photos by upload time
         const sortedPhotos = validPhotos.sort((a, b) => b.thoiGianTaiLen - a.thoiGianTaiLen);
@@ -394,7 +396,7 @@ export default function TaskDetail() {
         console.log('3. Generated filename:', filename);
         
         // Upload to Firebase Storage
-        const storageRef = ref(storage, filename);
+      const storageRef = ref(storage, filename);
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
         console.log('4. Image uploaded to Storage:', downloadURL);
@@ -908,9 +910,9 @@ export default function TaskDetail() {
     }, [task?.phanCong?.chiTietYeuCauId]);
 
     return (
-      <ScrollView contentContainerStyle={styles.tabSceneScrollContent}>
-        <Card style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.outline, borderWidth: 1 }]}>
-          <Card.Content style={{paddingHorizontal: 0, paddingBottom: 0}}>
+    <ScrollView contentContainerStyle={styles.tabSceneScrollContent}>
+      <Card style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.outline, borderWidth: 1 }]}>
+        <Card.Content style={{paddingHorizontal: 0, paddingBottom: 0}}>
             <View style={[styles.sectionHeader, { backgroundColor: colors.primary }]}>
                <MaterialCommunityIcons name="clipboard-list-outline" size={20} color={colors.onPrimary} />
                <Text style={[styles.sectionCardTitle, { color: colors.onPrimary }]}>Thông tin chung</Text>
@@ -977,26 +979,26 @@ export default function TaskDetail() {
                </View>
              ) : requesterInfo ? (
                <>
-                 <View style={styles.sectionItem}>
-                   <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Đơn vị:</Text>
-                   <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
+             <View style={styles.sectionItem}>
+               <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Đơn vị:</Text>
+               <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
                      {requesterInfo.tenDonVi}
-                   </Text>
-                 </View>
-                 <View style={styles.sectionItemRow}>
-                   <View style={styles.sectionItem}>
-                     <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Họ tên:</Text>
-                     <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
+               </Text>
+             </View>
+             <View style={styles.sectionItemRow}>
+               <View style={styles.sectionItem}>
+                 <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Họ tên:</Text>
+                 <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
                        {requesterInfo.hoTen}
-                     </Text>
-                   </View>
-                   <View style={styles.sectionItem}>
-                     <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>SĐT:</Text>
-                     <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
+                 </Text>
+               </View>
+               <View style={styles.sectionItem}>
+                 <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>SĐT:</Text>
+                 <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
                        {requesterInfo.soDienThoai}
-                     </Text>
-                   </View>
-                 </View>
+                 </Text>
+               </View>
+             </View>
                  <View style={styles.sectionItem}>
                    <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Email:</Text>
                    <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
@@ -1008,7 +1010,7 @@ export default function TaskDetail() {
                    <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
                      {requesterInfo.trangThai}
                    </Text>
-                 </View>
+             </View>
                  <View style={styles.sectionItem}>
                    <Text style={[styles.sectionItemTitle, { color: colors.onSurface }]}>Mô tả:</Text>
                    <Text style={[styles.sectionItemContent, { color: colors.onSurfaceVariant }]}>
@@ -1656,7 +1658,8 @@ export default function TaskDetail() {
     thongtin: ThongTinScene,
     thietbi: ThietBiScene,
     minhchung: MinhChungScene,
-    ktvthamgia: KtvThamGiaScene
+    ktvthamgia: KtvThamGiaScene,
+    tieptrinh: WorkProgress,
   });
 
   const renderTabBar = props => (

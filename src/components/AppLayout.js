@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView, Text } from 'react-native';
-import BottomNavigationBar from '../BottomNavigationBar';
-import useAppTheme from '../../hooks/useAppTheme';
+import BottomNavigationBar from './BottomNavigationBar';
+import useAppTheme from '../hooks/useAppTheme';
 
-export default function AppLayout({  showBottomBar = true, children }) {
+const AppLayout = ({ showBottomBar = true, children }) => {
   const { colors } = useAppTheme();
 
   return (
@@ -14,7 +14,7 @@ export default function AppLayout({  showBottomBar = true, children }) {
       {showBottomBar && <BottomNavigationBar />}
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -31,6 +31,8 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
 });
+
+export default AppLayout;
 
 // export default function AppLayout({ title = '', showBottomBar = true, children }) {
 //   const { colors } = useAppTheme();

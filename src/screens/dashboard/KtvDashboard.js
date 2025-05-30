@@ -22,9 +22,17 @@ export default function KTVDashboard() {
     specializations: []
   });
 
+  // Add state for donut data and total tasks
+  const [donutDataState, setDonutDataState] = useState([]);
+  const [totalTasksState, setTotalTasksState] = useState(0);
+
   useEffect(() => {
     if (currentUser) {
+      console.log('Fetching KTV data for user ID:', currentUser.id);
       fetchKTVData();
+    }
+    else {
+      console.log('currentUser is null or undefined, not fetching data.');
     }
   }, [currentUser]);
 
@@ -56,18 +64,48 @@ export default function KTVDashboard() {
         query(phanCongKTVRef, where('taiKhoanKTVId', '==', currentUser.id))
       );
 
+      console.log('Firestore query for tasks returned:', ktvTasks.docs.length, 'documents.');
       const tasks = ktvTasks.docs.map(doc => doc.data());
-      const pendingTasks = tasks.filter(task => task.trangThai === 'Chờ Phản Hồi').length;
-      const inProgressTasks = tasks.filter(task => task.trangThai === 'Đang Thực Hiện').length;
-      const completedTasks = tasks.filter(task => task.trangThai === 'Hoàn Thành').length;
+
+      // Count tasks by status
+      const taskCounts = tasks.reduce((counts, task) => {
+        const status = task.trangThai;
+        if (typeof status === 'string') {
+            const normalizedStatus = status.trim().toLowerCase();
+            counts[normalizedStatus] = (counts[normalizedStatus] || 0) + 1;
+        }
+        return counts;
+      }, {});
+
+      // Map counts to chart data structure and TASK_STATUS_LIST order
+      const updatedDonutData = TASK_STATUS_LIST.map(statusInfo => {
+        const normalizedLabel = statusInfo.label.trim().toLowerCase();
+        return {
+            value: taskCounts[normalizedLabel] || 0, // Use normalized label to look up count
+            color: statusInfo.color,
+        };
+      });
+
+      const totalTasksCount = tasks.length;
 
       setStats({
-        totalTasks: tasks.length,
-        pendingTasks,
-        inProgressTasks,
-        completedTasks,
+        totalTasks: totalTasksCount,
+        // Update individual stats if still used elsewhere
+        pendingTasks: taskCounts['Chờ Phản Hồi'] || 0,
+        inProgressTasks: taskCounts['Đang Thực Hiện'] || 0,
+        completedTasks: taskCounts['Hoàn Thành'] || 0,
+        // Add other statuses to stats if needed
+        pausedTasks: taskCounts['Tạm Nghỉ'] || 0,
+        rejectedTasks: taskCounts['Đã Từ Chối'] || 0,
+        acceptedTasks: taskCounts['Đã Chấp Nhận'] || 0,
+        cancelledTasks: taskCounts['Bị Hủy'] || 0, // Assuming 'Bị Hủy' is a status
         specializations
       });
+
+      // Set donut data state (assuming donutData should be state)
+      setDonutDataState(updatedDonutData);
+      setTotalTasksState(totalTasksCount);
+      console.log('Updated stats:', { totalTasksCount, updatedDonutData });
 
     } catch (error) {
       console.error('Error fetching KTV data:', error);
@@ -81,17 +119,9 @@ export default function KTVDashboard() {
     { key: 'inProgress', label: 'Đang Thực Hiện', color: '#2196F3' },
     { key: 'rejected', label: 'Đã Từ Chối', color: '#F44336' },
     { key: 'accepted', label: 'Đã Chấp Nhận', color: '#1976D2' },
+    { key: 'pending', label: 'Chờ Phản Hồi', color: '#FFEB3B' }, // Màu vàng nhạt
+    { key: 'cancelled', label: 'Bị Hủy', color: '#9E9E9E' }, // Màu xám
   ];
-
-  // Demo data, replace with real stats if available
-  const donutData = [
-    { value: 3, color: '#4CAF50' }, // Hoàn Thành
-    { value: 2, color: '#FFA726' }, // Tạm Nghỉ
-    { value: 1, color: '#2196F3' }, // Đang Thực Hiện
-    { value: 1, color: '#F44336' }, // Đã Từ Chối
-    { value: 2, color: '#1976D2' }, // Đã Chấp Nhận
-  ];
-  const totalTasks = donutData.reduce((sum, d) => sum + d.value, 0);
 
   const renderSpecializations = () => (
     <Card style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -190,16 +220,22 @@ export default function KTVDashboard() {
           </View>
           <View style={styles.donutChartWrapper}>
             <PieChart
-              data={donutData}
+              data={donutDataState}
               donut
               showText={false}
               innerRadius={60}
               radius={80}
               strokeWidth={0}
               centerLabelComponent={() => (
-                <Text style={styles.donutCenterText}>{totalTasks}</Text>
+                <View style={styles.donutCenterContainer}>
+                  <Text style={styles.donutCenterText}>{totalTasksState}</Text>
+                </View>
               )}
             />
+          </View>
+          <View style={styles.totalTasksBelowChart}>
+            <Text style={styles.totalTasksLabel}>Tổng số công việc:</Text>
+            <Text style={styles.totalTasksValue}>{totalTasksState}</Text>
           </View>
           <View style={styles.statusListWrapper}>
             {TASK_STATUS_LIST.map((item, idx) => (
@@ -207,7 +243,9 @@ export default function KTVDashboard() {
                 <View style={[styles.statusDot, { backgroundColor: item.color }]} />
                 <Text style={styles.statusLabel}>{item.label}</Text>
                 <View style={styles.statusLine} />
-                <Text style={styles.statusCount}>{donutData[idx]?.value || 0}</Text>
+                <Text style={styles.statusCount}>
+                   {(donutDataState.find(dataPoint => TASK_STATUS_LIST[idx].color === dataPoint.color)?.value || 0)}
+                </Text>
               </View>
             ))}
           </View>
@@ -269,9 +307,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 8,
   },
+  donutCenterContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   donutCenterText: {
     position: 'absolute',
-    top: 60,
+    top: 70,
     left: 0,
     right: 0,
     textAlign: 'center',
@@ -405,5 +452,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     textAlign: 'center',
+  },
+  totalTasksBelowChart: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  totalTasksLabel: {
+    fontSize: 18,
+    color: '#2a4d8f',
+    marginRight: 8,
+  },
+  totalTasksValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2a4d8f',
   },
 });
