@@ -10,8 +10,14 @@ import {
     StyleSheet,
     Dimensions,
 } from 'react-native';
+import { lightTheme } from '../../constants/themes';
 import { useRoute } from '@react-navigation/native';
 import useDeviceDetailViewModel from '../../hooks/useDeviceDetailViewModel';
+import DeviceInfoCard from '../../components/DeviceInfoCard';
+import DeviceLocationCard from '../../components/DeviceLocationCard';
+import DeviceMaintenanceCard from '../../components/DeviceMaintenanceCard';
+import NoteCard from '../../components/NoteCard';
+import RequestInfoCard from '../../components/RequestInfoCard';
 
 // 📐 Constants
 const windowWidth = Dimensions.get('window').width;
@@ -77,12 +83,36 @@ export default function DeviceDetailScreen() {
             )}
 
             <ScrollView style={{ padding: 16 }}>
+
+
+
+
                 {selectedTab === 0 && chiTietYeuCau ? (
                     <>
-                        <Text style={styles.sectionTitle}>Thông tin yêu cầu</Text>
-                        <Text>Đơn vị yêu cầu: {tenDonVi}</Text>
-                        <Text>Loại yêu cầu: {chiTietYeuCau.loaiYeuCau}</Text>
-                        <Text>Mô tả: {chiTietYeuCau.moTa}</Text>
+                        {/* <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>📋 Thông tin yêu cầu</Text>
+
+                            <Text style={styles.label}>
+                                Đơn vị yêu cầu: <Text style={styles.highlight}>{tenDonVi || 'Không rõ'}</Text>
+                            </Text>
+
+                            <Text style={styles.label}>
+                                Loại yêu cầu: <Text style={styles.loaiYeuCau}>{chiTietYeuCau?.loaiYeuCau || 'Không rõ'}</Text>
+                            </Text>
+
+                            <Text style={styles.label}>Mô tả:</Text>
+                            <View style={styles.descBox}>
+                                <Text style={styles.descText}>
+                                    {chiTietYeuCau?.moTa || 'Không có mô tả'}
+                                </Text>
+                            </View>
+                        </View> */}
+                        <RequestInfoCard
+                            donVi={tenDonVi}
+                            loaiYeuCau={chiTietYeuCau?.loaiYeuCau}
+                            moTa={chiTietYeuCau?.moTa}
+                        />
+
 
                         {imageUris.length > 0 && (
                             <>
@@ -97,21 +127,20 @@ export default function DeviceDetailScreen() {
                             </>
                         )}
 
-                        {videoUri && (
+                        {/* {videoUri && (
                             <>
                                 <Text style={styles.sectionTitle}>Video minh chứng</Text>
                                 <Text>▶ Video: {videoUri}</Text>
                             </>
-                        )}
+                        )} */}
                     </>
                 ) : (
                     <>
-                        <Text style={styles.sectionTitle}>Thông tin thiết bị</Text>
-                        <Text>Tên thiết bị: {thietBi.tenThietBi}</Text>
-                        <Text>Trạng thái: {thietBi.trangThai}</Text>
-                        <Text>Loại: {thietBi.loaiThietBi}</Text>
-                        <Text>Vị trí: {viTri}</Text>
-                        <Text>Mô tả: {thietBi.moTa || 'Không có mô tả'}</Text>
+
+                        <DeviceInfoCard device={thietBi} iconSource={require('../../../assets/illustrations/airconditioner.png')} />
+                        <DeviceLocationCard viTriString={viTri} />
+                        <DeviceMaintenanceCard device={thietBi} />
+                        <NoteCard note={thietBi.ghiChu} />
                     </>
                 )}
             </ScrollView>
@@ -130,6 +159,43 @@ export default function DeviceDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+    section: {
+
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: lightTheme.primary,
+        marginBottom: 12,
+    },
+    label: {
+        fontSize: 14,
+        color: lightTheme.onSurface,
+        marginBottom: 6,
+    },
+    highlight: {
+        fontWeight: '600',
+        color: lightTheme.onSurface,
+    },
+    loaiYeuCau: {
+        fontWeight: '600',
+        color: lightTheme.primary,
+    },
+    descBox: {
+        backgroundColor: lightTheme.surfaceVariant,
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: lightTheme.outlineVariant,
+        marginTop: 4,
+    },
+    descText: {
+        fontSize: 14,
+        color: lightTheme.onSurfaceVariant,
+        lineHeight: 20,
+    },
+
+
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 8 },
     thumbnail: {

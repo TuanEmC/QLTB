@@ -23,7 +23,7 @@ export default function AdminDashboardScreen() {
     return (
         <AppLayout showBottomBar={true}>
             <ScrollView contentContainerStyle={styles.container}>
-                <Text style={[styles.title, { color: colors.primary }]}>👑 Admin Dashboard</Text>
+                <Text style={[styles.title, { color: colors.primary }]}>Admin Dashboard</Text>
                 {options.map((opt) => (
                     <TouchableOpacity
                         key={opt.route}
