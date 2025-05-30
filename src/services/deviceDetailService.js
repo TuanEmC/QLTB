@@ -11,7 +11,7 @@ export async function getThietBiById(id) {
         let snap = await getDoc(doc(db, 'thiet_bi', id.toString()));
         if (snap.exists()) {
             const data = snap.data();
-            console.log('✅ Thiết bị tìm thấy (string id):', data);
+            //console.log('✅ Thiết bị tìm thấy (string id):', data);
             return { id: snap.id, ...data };
         }
 
@@ -20,7 +20,7 @@ export async function getThietBiById(id) {
             snap = await getDoc(doc(db, 'thiet_bi', Number(id)));
             if (snap.exists()) {
                 const data = snap.data();
-                console.log('✅ Thiết bị tìm thấy (numeric id):', data);
+                //console.log('✅ Thiết bị tìm thấy (numeric id):', data);
                 return { id: snap.id, ...data };
             }
         }
@@ -124,7 +124,7 @@ export async function getTenDonViById(donViId) {
 export async function getViTriByThietBi(thietBi) {
     try {
         console.log('▶️ START getViTriByThietBi');
-        console.log('📌 Input thietBi:', thietBi);
+        //console.log('📌 Input thietBi:', thietBi);
 
         if (!thietBi?.phongId) {
             throw new Error('❌ Thiết bị không có phongId');

@@ -1,216 +1,4 @@
-// import React, { useState } from 'react';
-// import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from 'react-native';
-// import { useRoute } from '@react-navigation/native';
-// import { Ionicons } from '@expo/vector-icons';
-// import useAdminRequestDetailViewModel from '../../hooks/useAdminRequestDetailViewModel';
-// import useAppTheme from '../../hooks/useAppTheme';
 
-// export default function AdminRequestDetailScreen() {
-//     const route = useRoute();
-//     const { colors } = useAppTheme();
-//     const { yeuCauId } = route.params;
-//     const {
-//         yeuCau,
-//         isLoading,
-//         trangThai,
-//         daPhanCongList,
-//         chuaPhanCongList,
-//         duyetYeuCau,
-//         tuChoiYeuCau
-//     } = useAdminRequestDetailViewModel(yeuCauId);
-//     const [tab, setTab] = useState('chua');
-
-//     const data = tab === 'chua' ? chuaPhanCongList : daPhanCongList;
-
-//     const renderItem = ({ item }) => {
-//         const {
-//             tenThietBi,
-//             tenLoaiThietBi,
-//             soAnh,
-//             soVideo,
-//             anhDaiDien,
-//             totalDoingTechnicians,
-//             totalResponsibleTechnicians
-//         } = item.chiTiet;
-
-//         const hasKtv = totalResponsibleTechnicians > 0;
-//         const isActive = totalDoingTechnicians > 0;
-//         const barColor = isActive ? colors.success : colors.warning;
-
-//         return (
-//             <View style={styles.cardWrapper}>
-//                 <View style={[styles.statusBar, { backgroundColor: barColor }]} />
-//                 <View style={[styles.card, { backgroundColor: colors.surface }]}>
-//                     <View style={styles.cardHeader}>
-//                         <Text style={[styles.loaiYeuCau, { color: colors.onPrimaryContainer }]}>📋 {item.chiTiet.loaiYeuCau}</Text>
-//                         {hasKtv && (
-//                             <View style={styles.ktvInfo}>
-//                                 <Ionicons name="people" size={14} color={colors.onPrimaryContainer} />
-//                                 <Text style={{ marginLeft: 4, color: colors.onPrimaryContainer }}>{totalDoingTechnicians}/{totalResponsibleTechnicians}</Text>
-//                             </View>
-//                         )}
-//                     </View>
-
-//                     <View style={styles.contentRow}>
-//                         <Image
-//                             source={anhDaiDien ? { uri: anhDaiDien } : require('../../../assets/illustrations/placeholder.png')}
-//                             style={styles.image}
-//                         />
-//                         <View style={styles.contentText}>
-//                             <Text style={[styles.tenThietBi, { color: colors.onSurface }]} numberOfLines={1}>{tenThietBi}</Text>
-//                             <Text style={{ fontSize: 13, color: colors.onSurfaceVariant }}>{tenLoaiThietBi}</Text>
-//                             <Text style={{ fontSize: 12, marginTop: 4, color: colors.onSurfaceVariant }}>
-//                                 📷 {soAnh}   🎥 {soVideo}
-//                             </Text>
-//                         </View>
-//                     </View>
-//                 </View>
-//             </View>
-//         );
-//     };
-
-//     if (isLoading) return <ActivityIndicator style={{ marginTop: 20 }} />;
-
-//     return (
-//         <View style={{ flex: 1 }}>
-//             {trangThai === 'Chờ Xác Nhận' ? (
-//                 <View style={styles.waitingBox}>
-//                     <Text style={{ fontWeight: '600', fontSize: 16, color: colors.primary }}>🕒 Yêu cầu đang chờ xác nhận</Text>
-//                 </View>
-//             ) : (
-//                 <View style={[styles.tabRow, { borderColor: colors.outline }]}>
-//                     <TouchableOpacity
-//                         style={[styles.tabItem, tab === 'chua' && styles.activeTab]}
-//                         onPress={() => setTab('chua')}
-//                     >
-//                         <Text style={styles.tabText}>Chưa phân công ({chuaPhanCongList.length})</Text>
-//                     </TouchableOpacity>
-//                     <TouchableOpacity
-//                         style={[styles.tabItem, tab === 'da' && styles.activeTab]}
-//                         onPress={() => setTab('da')}
-//                     >
-//                         <Text style={styles.tabText}>Đã phân công ({daPhanCongList.length})</Text>
-//                     </TouchableOpacity>
-//                 </View>
-//             )}
-
-//             <FlatList
-//                 data={data}
-//                 keyExtractor={item => item.id}
-//                 renderItem={renderItem}
-//                 contentContainerStyle={{ paddingBottom: 100 }}
-//             />
-
-//             {trangThai === 'Chờ Xác Nhận' && (
-//                 <View style={styles.footerButtonRow}>
-//                     <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.success }]} onPress={duyetYeuCau}>
-//                         <Text style={styles.actionText}>✔️ Duyệt</Text>
-//                     </TouchableOpacity>
-//                     <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.error }]} onPress={() => tuChoiYeuCau('Lý do từ chối...')}>
-//                         <Text style={styles.actionText}>❌ Từ chối</Text>
-//                     </TouchableOpacity>
-//                 </View>
-//             )}
-//         </View>
-//     );
-// }
-
-// const styles = StyleSheet.create({
-//     tabRow: {
-//         flexDirection: 'row',
-//         justifyContent: 'center',
-//         backgroundColor: '#fff',
-//         paddingVertical: 8,
-//         borderBottomWidth: 1,
-//         elevation: 2
-//     },
-//     tabItem: {
-//         paddingHorizontal: 16,
-//         paddingVertical: 6,
-//         borderBottomWidth: 2,
-//         borderColor: 'transparent'
-//     },
-//     activeTab: {
-//         borderColor: '#007bff'
-//     },
-//     tabText: {
-//         fontWeight: 'bold',
-//         fontSize: 14
-//     },
-//     waitingBox: {
-//         alignItems: 'center',
-//         paddingVertical: 12,
-//         borderBottomWidth: 1,
-//         backgroundColor: '#fff'
-//     },
-//     cardWrapper: {
-//         margin: 12,
-//         borderRadius: 12,
-//         overflow: 'hidden'
-//     },
-//     statusBar: {
-//         height: 4
-//     },
-//     card: {
-//         borderRadius: 12,
-//         padding: 12,
-//         shadowColor: '#000',
-//         shadowOpacity: 0.1,
-//         shadowRadius: 4,
-//         shadowOffset: { width: 0, height: 2 }
-//     },
-//     cardHeader: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         marginBottom: 8
-//     },
-//     loaiYeuCau: {
-//         fontWeight: '700',
-//         fontSize: 15
-//     },
-//     ktvInfo: {
-//         flexDirection: 'row',
-//         alignItems: 'center'
-//     },
-//     contentRow: {
-//         flexDirection: 'row',
-//         alignItems: 'center'
-//     },
-//     image: {
-//         width: 72,
-//         height: 72,
-//         borderRadius: 12,
-//         backgroundColor: '#ddd',
-//         borderWidth: 2,
-//         borderColor: '#ccc'
-//     },
-//     contentText: {
-//         flex: 1,
-//         marginLeft: 12
-//     },
-//     tenThietBi: {
-//         fontWeight: '600',
-//         fontSize: 16
-//     },
-//     footerButtonRow: {
-//         flexDirection: 'row',
-//         justifyContent: 'space-around',
-//         padding: 12,
-//         borderTopWidth: 1,
-//         backgroundColor: '#fff'
-//     },
-//     actionButton: {
-//         flex: 1,
-//         paddingVertical: 12,
-//         marginHorizontal: 8,
-//         borderRadius: 8,
-//         alignItems: 'center'
-//     },
-//     actionText: {
-//         color: '#fff',
-//         fontWeight: '600'
-//     }
-// });
 
 
 
@@ -248,6 +36,10 @@ export default function AdminRequestDetailScreen() {
     useEffect(() => {
         reload();
     }, []);
+
+    useEffect(() => {
+    }, [daPhanCongList]);
+
 
     if (isLoading || !yeuCau) {
         return (
@@ -294,12 +86,30 @@ export default function AdminRequestDetailScreen() {
 
         return (
             <TouchableOpacity
-                onPress={() =>
-                    navigation.navigate('DeviceDetail', {
-                        thietBiId: chiTiet.thietBiId,
-                        yeuCauId: yeuCauId, // giữ nguyên context của yêu cầu hiện tại
-                    })
-                }
+                // onPress={() =>
+                //     navigation.navigate('DeviceDetail', {
+                //         thietBiId: chiTiet.thietBiId,
+                //         yeuCauId: yeuCauId, // giữ nguyên context của yêu cầu hiện tại
+                //     })
+                // }
+                onPress={() => {
+                    const { chiTiet } = item;
+                    const { phanCongId } = chiTiet;
+
+                    if (tab === 'da' && phanCongId) {
+                        console.log('➡️ Điều hướng tới PhanCongDetail:', phanCongId);
+
+                        navigation.navigate('PhanCongDetail', { id: phanCongId });
+                    } else {
+                        navigation.navigate('DeviceDetail', {
+                            thietBiId: chiTiet.thietBiId,
+                            yeuCauId: yeuCauId,
+                        });
+                    }
+                }}
+
+
+
             >
                 <View style={styles.cardWrapper}>
                     <View
