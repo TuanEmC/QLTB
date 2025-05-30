@@ -52,50 +52,101 @@ export default function useDeviceDetailViewModel(thietBiId, yeuCauId = null) {
     //     fetchAll();
     // }, [thietBiId, yeuCauId]);
 
+    // useEffect(() => {
+    //     if (!thietBiId || !yeuCauId) return;
+    //     const fetchAll = async () => {
+    //         setLoading(true);
+    //         try {
+    //             // console.log('🚀 Bắt đầu load chi tiết thiết bị');
+    //             // console.log('📌 thietBiId =', thietBiId);
+    //             const tb = await getThietBiById(thietBiId);
+    //             if (!tb) throw new Error('Không tìm thấy thiết bị');
+    //             // console.log('✅ Thiết bị:', tb);
+    //             setThietBi(tb);
+
+    //             const viTriStr = await getViTriByThietBi(tb);
+    //             setViTri(viTriStr);
+
+    //             if (yeuCauId) {
+    //                 // console.log('📌 yeuCauId =', yeuCauId);
+    //                 const chiTiet = await getChiTietYeuCau(yeuCauId, thietBiId);
+    //                 // console.log('✅ Chi tiết yêu cầu:', chiTiet);
+    //                 setChiTietYeuCau(chiTiet);
+
+    //                 if (chiTiet) {
+    //                     const media = await getMinhChungByChiTietId(chiTiet.id);
+    //                     // console.log('🖼️ Media:', media);
+    //                     setImageUris(media.images);
+    //                     setVideoUri(media.video);
+    //                 }
+
+    //                 const yc = await getYeuCauById(yeuCauId);
+    //                 // console.log('✅ Yêu cầu:', yc);
+    //                 setYeuCau(yc);
+
+    //                 const donViTen = await getTenDonViById(yc?.donViId);
+    //                 // console.log('🏢 Đơn vị:', donViTen);
+    //                 setTenDonVi(donViTen);
+    //             }
+    //         } catch (e) {
+    //             // console.error('❌ Lỗi trong useDeviceDetailViewModel:', e);
+    //         }
+    //         setLoading(false);
+    //     };
+
+    //     fetchAll();
+    // }, [thietBiId, yeuCauId]);
     useEffect(() => {
-        if (!thietBiId || !yeuCauId) return;
-        const fetchAll = async () => {
+        if (!thietBiId) return;
+
+        const fetchThietBi = async () => {
             setLoading(true);
             try {
-                // console.log('🚀 Bắt đầu load chi tiết thiết bị');
-                // console.log('📌 thietBiId =', thietBiId);
                 const tb = await getThietBiById(thietBiId);
                 if (!tb) throw new Error('Không tìm thấy thiết bị');
-                // console.log('✅ Thiết bị:', tb);
                 setThietBi(tb);
 
                 const viTriStr = await getViTriByThietBi(tb);
                 setViTri(viTriStr);
-
-                if (yeuCauId) {
-                    // console.log('📌 yeuCauId =', yeuCauId);
-                    const chiTiet = await getChiTietYeuCau(yeuCauId, thietBiId);
-                    // console.log('✅ Chi tiết yêu cầu:', chiTiet);
-                    setChiTietYeuCau(chiTiet);
-
-                    if (chiTiet) {
-                        const media = await getMinhChungByChiTietId(chiTiet.id);
-                        // console.log('🖼️ Media:', media);
-                        setImageUris(media.images);
-                        setVideoUri(media.video);
-                    }
-
-                    const yc = await getYeuCauById(yeuCauId);
-                    // console.log('✅ Yêu cầu:', yc);
-                    setYeuCau(yc);
-
-                    const donViTen = await getTenDonViById(yc?.donViId);
-                    // console.log('🏢 Đơn vị:', donViTen);
-                    setTenDonVi(donViTen);
-                }
             } catch (e) {
-                // console.error('❌ Lỗi trong useDeviceDetailViewModel:', e);
+                console.error('❌ Lỗi khi load thiết bị:', e);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
-        fetchAll();
-    }, [thietBiId, yeuCauId]);
+        fetchThietBi();
+    }, [thietBiId]);
+
+    useEffect(() => {
+        if (!yeuCauId || !thietBiId) return;
+
+        const fetchYeuCau = async () => {
+            setLoading(true);
+            try {
+                const chiTiet = await getChiTietYeuCau(yeuCauId, thietBiId);
+                setChiTietYeuCau(chiTiet);
+
+                if (chiTiet) {
+                    const media = await getMinhChungByChiTietId(chiTiet.id);
+                    setImageUris(media.images || []);
+                    setVideoUri(media.video || null);
+                }
+
+                const yc = await getYeuCauById(yeuCauId);
+                setYeuCau(yc);
+
+                const donViTen = await getTenDonViById(yc?.donViId);
+                setTenDonVi(donViTen);
+            } catch (e) {
+                console.error('❌ Lỗi khi load yêu cầu:', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchYeuCau();
+    }, [yeuCauId, thietBiId]);
 
 
     return {
