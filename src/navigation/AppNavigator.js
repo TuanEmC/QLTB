@@ -25,6 +25,8 @@ import PhongListScreen from '../screens/donvi/PhongListScreen';
 import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
 import SplashScreen from '../screens/common/SplashScreen';
 import AdminRequestDetailScreen from '../screens/admin/AdminRequestDetailScreen';
+import DeviceDetailScreen from '../screens/admin/DeviceDetailScreen';
+
 
 
 
@@ -92,7 +94,7 @@ export default function AppNavigator() {
       <Stack.Screen name="TestBottomSheet" component={TestBottomSheetScreen} />
       <Stack.Screen name="DeviceList" component={DeviceListScreen} />
       <Stack.Screen name="NewRequest" component={NewRequestScreen} />
-      <Stack.Screen name="ThietBiDetail" component={ThietBiDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
+      <Stack.Screen name="ThietBiDetail" component={DeviceDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
       <Stack.Screen name="PhongList" component={PhongListScreen} />
       <Stack.Screen
         name="AdminRequestList"
@@ -103,6 +105,11 @@ export default function AppNavigator() {
         name="AdminRequestDetail"
         component={AdminRequestDetailScreen}
         options={{ title: 'Chi tiết yêu cầu' }}
+      />
+      <Stack.Screen
+        name="DeviceDetail"
+        component={DeviceDetailScreen}
+        options={{ title: 'Chi tiết thiết bị' }}
       />
 
       {/* <Stack.Screen name="ThietBiTheoPhong" component={ThietBiTheoPhongScreen} /> */}

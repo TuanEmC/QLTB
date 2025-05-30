@@ -220,9 +220,13 @@ import { useRoute } from '@react-navigation/native';
 import useAdminRequestDetailViewModel from '../../hooks/useAdminRequestDetailViewModel';
 import { Ionicons } from '@expo/vector-icons';
 import { TRANG_THAI_YEU_CAU } from '../../constants/trangThaiYeuCau';
+import { useNavigation } from '@react-navigation/native';
+
 
 
 export default function AdminRequestDetailScreen() {
+    const navigation = useNavigation();
+
     const route = useRoute();
     const { yeuCauId } = route.params;
     const {
@@ -251,38 +255,99 @@ export default function AdminRequestDetailScreen() {
         );
     }
 
+    // const renderItem = ({ item }) => {
+    //     const { chiTiet } = item;
+    //     const colorBar = chiTiet.totalDoingTechnicians > 0 ? '#4caf50' : '#ff9800';
+
+    //     return (
+    //         <View style={styles.cardWrapper}>
+    //             <View style={[styles.cardHeader, { backgroundColor: chiTiet.totalResponsibleTechnicians > 0 ? '#003c8f' : '#ff6f00' }]}>
+    //                 <Text style={styles.headerText}>{chiTiet.loaiYeuCau}</Text>
+    //                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    //                     <Ionicons name="people" size={14} color="white" />
+    //                     <Text style={styles.ktvText}>{chiTiet.totalDoingTechnicians}/{chiTiet.totalResponsibleTechnicians}</Text>
+    //                 </View>
+    //             </View>
+    //             <View style={styles.cardBody}>
+    //                 <Image
+    //                     source={chiTiet.anhDaiDien ? { uri: chiTiet.anhDaiDien } : require('../../../assets/illustrations/placeholder.png')}
+    //                     style={styles.image}
+    //                 />
+    //                 <View style={{ flex: 1, marginLeft: 12 }}>
+    //                     <Text numberOfLines={1} style={styles.tenThietBi}>{chiTiet.tenThietBi}</Text>
+    //                     <Text numberOfLines={1} style={styles.subText}>{chiTiet.loaiYeuCau} - {chiTiet.tenLoaiThietBi}</Text>
+    //                     <View style={styles.iconRow}>
+    //                         <Ionicons name="image-outline" size={16} color="#555" />
+    //                         <Text style={styles.iconText}>{chiTiet.soAnh || 0}</Text>
+    //                         <Ionicons name="videocam-outline" size={16} color="#555" style={{ marginLeft: 12 }} />
+    //                         <Text style={styles.iconText}>{chiTiet.soVideo || 0}</Text>
+    //                     </View>
+    //                 </View>
+    //             </View>
+    //         </View>
+    //     );
+    // };
+
     const renderItem = ({ item }) => {
         const { chiTiet } = item;
         const colorBar = chiTiet.totalDoingTechnicians > 0 ? '#4caf50' : '#ff9800';
 
         return (
-            <View style={styles.cardWrapper}>
-                <View style={[styles.cardHeader, { backgroundColor: chiTiet.totalResponsibleTechnicians > 0 ? '#003c8f' : '#ff6f00' }]}>
-                    <Text style={styles.headerText}>{chiTiet.loaiYeuCau}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="people" size={14} color="white" />
-                        <Text style={styles.ktvText}>{chiTiet.totalDoingTechnicians}/{chiTiet.totalResponsibleTechnicians}</Text>
+            <TouchableOpacity
+                onPress={() =>
+                    navigation.navigate('DeviceDetail', {
+                        thietBiId: chiTiet.thietBiId,
+                        yeuCauId: yeuCauId, // giữ nguyên context của yêu cầu hiện tại
+                    })
+                }
+            >
+                <View style={styles.cardWrapper}>
+                    <View
+                        style={[
+                            styles.cardHeader,
+                            {
+                                backgroundColor:
+                                    chiTiet.totalResponsibleTechnicians > 0 ? '#003c8f' : '#ff6f00',
+                            },
+                        ]}
+                    >
+                        <Text style={styles.headerText}>{chiTiet.loaiYeuCau}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="people" size={14} color="white" />
+                            <Text style={styles.ktvText}>
+                                {chiTiet.totalDoingTechnicians}/{chiTiet.totalResponsibleTechnicians}
+                            </Text>
+                        </View>
                     </View>
-                </View>
-                <View style={styles.cardBody}>
-                    <Image
-                        source={chiTiet.anhDaiDien ? { uri: chiTiet.anhDaiDien } : require('../../../assets/illustrations/placeholder.png')}
-                        style={styles.image}
-                    />
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text numberOfLines={1} style={styles.tenThietBi}>{chiTiet.tenThietBi}</Text>
-                        <Text numberOfLines={1} style={styles.subText}>{chiTiet.loaiYeuCau} - {chiTiet.tenLoaiThietBi}</Text>
-                        <View style={styles.iconRow}>
-                            <Ionicons name="image-outline" size={16} color="#555" />
-                            <Text style={styles.iconText}>{chiTiet.soAnh || 0}</Text>
-                            <Ionicons name="videocam-outline" size={16} color="#555" style={{ marginLeft: 12 }} />
-                            <Text style={styles.iconText}>{chiTiet.soVideo || 0}</Text>
+                    <View style={styles.cardBody}>
+                        <Image
+                            source={
+                                chiTiet.anhDaiDien
+                                    ? { uri: chiTiet.anhDaiDien }
+                                    : require('../../../assets/illustrations/placeholder.png')
+                            }
+                            style={styles.image}
+                        />
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text numberOfLines={1} style={styles.tenThietBi}>
+                                {chiTiet.tenThietBi}
+                            </Text>
+                            <Text numberOfLines={1} style={styles.subText}>
+                                {chiTiet.loaiYeuCau} - {chiTiet.tenLoaiThietBi}
+                            </Text>
+                            <View style={styles.iconRow}>
+                                <Ionicons name="image-outline" size={16} color="#555" />
+                                <Text style={styles.iconText}>{chiTiet.soAnh || 0}</Text>
+                                <Ionicons name="videocam-outline" size={16} color="#555" style={{ marginLeft: 12 }} />
+                                <Text style={styles.iconText}>{chiTiet.soVideo || 0}</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
-            </View>
+            </TouchableOpacity>
         );
     };
+
 
     const handleRejectConfirm = () => {
         if (!rejectReason.trim()) return;
