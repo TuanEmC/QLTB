@@ -26,6 +26,7 @@ import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
 import SplashScreen from '../screens/common/SplashScreen';
 import AdminRequestDetailScreen from '../screens/admin/AdminRequestDetailScreen';
 import DeviceDetailScreen from '../screens/admin/DeviceDetailScreen';
+import PhanCongDetailScreen from '../screens/admin/PhanCongDetailScreen';
 
 
 
@@ -110,6 +111,11 @@ export default function AppNavigator() {
         name="DeviceDetail"
         component={DeviceDetailScreen}
         options={{ title: 'Chi tiết thiết bị' }}
+      />
+      <Stack.Screen
+        name="PhanCongDetail"
+        component={PhanCongDetailScreen}
+        options={{ title: 'Chi tiết phân công' }}
       />
 
       {/* <Stack.Screen name="ThietBiTheoPhong" component={ThietBiTheoPhongScreen} /> */}

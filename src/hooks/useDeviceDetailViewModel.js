@@ -53,6 +53,7 @@ export default function useDeviceDetailViewModel(thietBiId, yeuCauId = null) {
     // }, [thietBiId, yeuCauId]);
 
     useEffect(() => {
+        if (!thietBiId || !yeuCauId) return;
         const fetchAll = async () => {
             setLoading(true);
             try {
