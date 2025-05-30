@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useSession } from '../context/SessionContext';
@@ -74,7 +74,6 @@ function MainDrawer() {
 // New component for KtvLamViec bottom tabs
 // This component will now fetch the task data in real-time
 import { doc, onSnapshot } from 'firebase/firestore'; // Import necessary Firestore functions
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
 
 function KtvLamViecBottomTabs({ route }) {
   const { colors } = useAppTheme();
