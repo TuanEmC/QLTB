@@ -1,6 +1,6 @@
 import { db } from './firebaseConfig';
 import {
-    collection, getDocs, query, where
+    collection, getDocs, query, where, doc, getDoc
 } from 'firebase/firestore';
 
 export async function getPhongByDonVi(donViId) {
@@ -31,11 +31,24 @@ export async function getPhongByDonVi(donViId) {
         tenTang: tangMap[p.tangId] || 'N/A',
         soLuongThietBi: thietBiPhongMap[p.id] || 0,
     }));
-
-
 }
 
+export async function getPhongById(phongId) {
+    try {
+        const docRef = doc(db, 'phong', String(phongId));
+        const docSnap = await getDoc(docRef);
 
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() };
+        } else {
+            console.log('No such document!');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error getting phong by ID:', error);
+        throw error;
+    }
+}
 
 export async function getAllDay() {
     const snap = await getDocs(collection(db, 'day'));

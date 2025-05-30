@@ -8,56 +8,78 @@ import {
     TouchableOpacity,
     Modal,
     Pressable,
+    ActivityIndicator
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DeviceCardInGrid from '../../components/DeviceCardInGrid';
 import useDeviceListViewModel from '../../hooks/useDeviceListViewModel';
 import { useSession } from '../../context/SessionContext';
-import { ActivityIndicator } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { getPhongById } from '../../services/phongService';
 
 
 const FILTER_KEYS = ['Phòng', 'Trạng thái', 'Loại thiết bị'];
 
 
-export default function DeviceListScreen({ route }) {
+export default function DeviceListScreen({
+    route
+}) {
     const { currentUser } = useSession();
-    const { isSelectMode = false, yeuCauId = null } = route.params || {};
-    // const donViId = currentUser?.donViId;
-    // const { devices, filters, setFilters, resetFilters } = useDeviceListViewModel(donViId);
+    const { isSelectMode = false, yeuCauId = null, phongId = null } = route.params || {};
     const isAdmin = currentUser.vaiTroId === 1;
     const donViId = currentUser?.donViId;
-    const { devices, filters, setFilters, resetFilters } = useDeviceListViewModel({ isAdmin, donViId });
-    console.log('📌 isAdmin:', isAdmin, 'donViId:', donViId);
+
+    const [initialPhongName, setInitialPhongName] = useState(null);
+
+    useEffect(() => {
+        if (phongId) {
+            getPhongById(phongId).then(phong => {
+                if (phong) {
+                    setInitialPhongName(phong.tenPhong);
+                }
+            }).catch(error => {
+                console.error('Error fetching phong data:', error);
+                setInitialPhongName('Không rõ phòng');
+            });
+        }
+    }, [phongId]);
+
+    const {
+        devices,
+        filters,
+        setFilters,
+        resetFilters,
+        isLoading: viewModelLoading
+    } = useDeviceListViewModel({
+        isAdmin,
+        donViId
+    });
+    console.log('📌 isAdmin:', isAdmin, 'donViId:', donViId, 'phongId', phongId);
+
+    useEffect(() => {
+        if (!viewModelLoading && initialPhongName && !filters.phong) {
+            setFilters(prev => ({
+                ...prev,
+                phong: initialPhongName
+            }));
+        }
+    }, [viewModelLoading, initialPhongName, setFilters, filters.phong]);
 
 
     const [selectedDevices, setSelectedDevices] = useState([]);
     const [currentFilterKey, setCurrentFilterKey] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [filterValues, setFilterValues] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
 
 
     const navigation = useNavigation();
 
     useEffect(() => {
-        setIsLoading(devices.length === 0);
-    }, [devices]);
-
-    // useEffect(() => {
-    //     if (currentFilterKey) {
-    //         const values = Array.from(new Set(devices.map(d => getValueByKey(d, currentFilterKey))));
-    //         setFilterValues(values);
-    //         setModalVisible(true);
-    //     }
-    // }, [currentFilterKey]);
-
-    useEffect(() => {
-        if (currentFilterKey) {
+        if (currentFilterKey && Array.isArray(devices) && devices.length > 0) {
             const values = Array.from(new Set(devices.map(d => getValueByKey(d, currentFilterKey))));
             setFilterValues(values);
         }
-    }, [currentFilterKey]);
+    }, [currentFilterKey, devices]);
 
 
     useEffect(() => {
@@ -72,12 +94,6 @@ export default function DeviceListScreen({ route }) {
         setModalVisible(false);
         setCurrentFilterKey(null);
     };
-
-    // const toggleSelect = (id) => {
-    //     setSelectedDevices(prev =>
-    //         prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    //     );
-    // };
 
     const renderItem = ({ item }) => (
         <DeviceCardInGrid
@@ -112,7 +128,7 @@ export default function DeviceListScreen({ route }) {
                 </TouchableOpacity>
             </View>
 
-            {isLoading ? (
+            {viewModelLoading ? (
                 <View style={styles.loaderContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
                     <Text style={{ marginTop: 10 }}>Đang tải thiết bị...</Text>
@@ -134,17 +150,14 @@ export default function DeviceListScreen({ route }) {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Chọn {currentFilterKey}</Text>
-                        <ScrollView>
-                            {filterValues.map(value => (
-                                <Pressable
-                                    key={value}
-                                    style={styles.modalItem}
-                                    onPress={() => handleFilterSelect(currentFilterKey, value)}>
-                                    <Text>{value}</Text>
-                                </Pressable>
-                            ))}
-                        </ScrollView>
-
+                        {(filterValues || []).map(value => (
+                            <Pressable
+                                key={value}
+                                style={styles.modalItem}
+                                onPress={() => handleFilterSelect(currentFilterKey, value)}>
+                                <Text>{value}</Text>
+                            </Pressable>
+                        ))}
                         <Pressable onPress={() => setModalVisible(false)} style={styles.modalClose}>
                             <Text>Đóng</Text>
                         </Pressable>
@@ -186,7 +199,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
-        maxHeight: '60%',  // Giới hạn chiều cao modal
+        maxHeight: '60%',
     },
 
     modalTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 10 },

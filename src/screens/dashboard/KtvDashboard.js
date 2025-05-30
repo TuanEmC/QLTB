@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-nati
 import { useNavigation } from '@react-navigation/native';
 import useAppTheme from '../../hooks/useAppTheme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../../services/firebaseConfig';
 import { Card, Title, Paragraph, ProgressBar } from 'react-native-paper';
 import { useSession } from '../../context/SessionContext';
@@ -27,45 +27,26 @@ export default function KTVDashboard() {
   const [totalTasksState, setTotalTasksState] = useState(0);
 
   useEffect(() => {
-    if (currentUser) {
-      console.log('Fetching KTV data for user ID:', currentUser.id);
-      fetchKTVData();
+    if (!currentUser) {
+      console.log('currentUser is null or undefined, not setting up listeners.');
+      return;
     }
-    else {
-      console.log('currentUser is null or undefined, not fetching data.');
-    }
-  }, [currentUser]);
 
-  const fetchKTVData = async () => {
-    try {
-      // Fetch KTV's specializations
-      const chuyenMonKTVRef = collection(db, 'chuyen_mon_ktv');
-      const chuyenMonRef = collection(db, 'chuyen_mon');
-      const phanCongKTVRef = collection(db, 'phan_cong_ktv');
-      const phanCongRef = collection(db, 'phan_cong');
+    console.log('Setting up real-time listeners for user ID:', currentUser.id);
 
-      // Get KTV's specializations
-      const ktvSpecializations = await getDocs(
-        query(chuyenMonKTVRef, where('kyThuatVienId', '==', currentUser.id))
-      );
+    // Setup listener for KTV's tasks
+    const phanCongKTVRef = collection(db, 'phan_cong_ktv');
+    const tasksQuery = query(
+      phanCongKTVRef,
+      where('taiKhoanKTVId', '==', currentUser.id)
+    );
 
-      const specializations = [];
-      for (const doc of ktvSpecializations.docs) {
-        const chuyenMonDoc = await getDocs(
-          query(chuyenMonRef, where('id', '==', doc.data().chuyenMonId))
-        );
-        if (!chuyenMonDoc.empty) {
-          specializations.push(chuyenMonDoc.docs[0].data());
-        }
-      }
-
-      // Get KTV's tasks
-      const ktvTasks = await getDocs(
-        query(phanCongKTVRef, where('taiKhoanKTVId', '==', currentUser.id))
-      );
-
-      console.log('Firestore query for tasks returned:', ktvTasks.docs.length, 'documents.');
-      const tasks = ktvTasks.docs.map(doc => doc.data());
+    const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
+      console.log('Firestore tasks snapshot received.');
+      const tasks = snapshot.docs.map(doc => ({
+         docId: doc.id, // Include docId
+        ...doc.data()
+        }));
 
       // Count tasks by status
       const taskCounts = tasks.reduce((counts, task) => {
@@ -91,26 +72,62 @@ export default function KTVDashboard() {
       setStats({
         totalTasks: totalTasksCount,
         // Update individual stats if still used elsewhere
-        pendingTasks: taskCounts['Chờ Phản Hồi'] || 0,
-        inProgressTasks: taskCounts['Đang Thực Hiện'] || 0,
-        completedTasks: taskCounts['Hoàn Thành'] || 0,
+        pendingTasks: taskCounts['chờ phản hồi'] || 0, // Use normalized keys
+        inProgressTasks: taskCounts['đang thực hiện'] || 0, // Use normalized keys
+        completedTasks: taskCounts['hoàn thành'] || 0, // Use normalized keys
         // Add other statuses to stats if needed
-        pausedTasks: taskCounts['Tạm Nghỉ'] || 0,
-        rejectedTasks: taskCounts['Đã Từ Chối'] || 0,
-        acceptedTasks: taskCounts['Đã Chấp Nhận'] || 0,
-        cancelledTasks: taskCounts['Bị Hủy'] || 0, // Assuming 'Bị Hủy' is a status
-        specializations
+        pausedTasks: taskCounts['tạm nghỉ'] || 0, // Use normalized keys
+        rejectedTasks: taskCounts['đã từ chối'] || 0, // Use normalized keys
+        acceptedTasks: taskCounts['đã chấp nhận'] || 0, // Use normalized keys
+        cancelledTasks: taskCounts['bị hủy'] || 0, // Use normalized keys
+        specializations: stats.specializations // Keep existing specializations
       });
 
       // Set donut data state (assuming donutData should be state)
       setDonutDataState(updatedDonutData);
       setTotalTasksState(totalTasksCount);
-      console.log('Updated stats:', { totalTasksCount, updatedDonutData });
+      console.log('Updated tasks stats:', { totalTasksCount, updatedDonutData });
+    }, (error) => {
+       console.error('Error fetching tasks snapshot:', error);
+    });
 
-    } catch (error) {
-      console.error('Error fetching KTV data:', error);
-    }
-  };
+    // Fetch specializations once (they are less likely to change frequently)
+     // Keeping this as getDocs for efficiency unless real-time updates are needed here too
+    const fetchSpecializations = async () => {
+       try {
+         const chuyenMonKTVRef = collection(db, 'chuyen_mon_ktv');
+         const chuyenMonRef = collection(db, 'chuyen_mon');
+
+         const ktvSpecializations = await getDocs(
+           query(chuyenMonKTVRef, where('kyThuatVienId', '==', currentUser.id))
+         );
+
+         const specializations = [];
+         for (const doc of ktvSpecializations.docs) {
+           const chuyenMonDoc = await getDocs(
+             query(chuyenMonRef, where('id', '==', doc.data().chuyenMonId))
+           );
+           if (!chuyenMonDoc.empty) {
+             specializations.push(chuyenMonDoc.docs[0].data());
+           }
+         }
+         setStats(prevStats => ({ ...prevStats, specializations }));
+          console.log('Fetched specializations:', specializations);
+       } catch (error) {
+         console.error('Error fetching specializations:', error);
+       }
+    };
+
+    fetchSpecializations();
+
+    // Cleanup listeners on component unmount
+    return () => {
+      console.log('Cleaning up Firestore listeners.');
+      unsubscribeTasks();
+      // If you add other listeners, unsubscribe them here too
+    };
+
+  }, [currentUser]); // Rerun effect if currentUser changes
 
   // Thêm mapping trạng thái và màu sắc
   const TASK_STATUS_LIST = [

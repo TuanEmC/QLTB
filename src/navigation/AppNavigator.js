@@ -7,6 +7,15 @@ import LogoutScreen from '../screens/auth/LogoutScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import SplashScreen from '../screens/common/SplashScreen';
+import PhongListScreen from '../screens/donvi/PhongListScreen';
+import AdminRequestListScreen from '../screens/admin/AdminRequestListScreen';
+import TaskList from '../screens/dashboard/TaskList';
+import Specializations from '../screens/dashboard/Specializations';
+import TaskDetail from '../screens/dashboard/TaskDetail';
+
+// Import the tab components as named exports from KtvLamViec.js
+import { TabChiTietPhanCong, TabCongViec, TabTienTrinhLamViec } from '../screens/dashboard/KtvLamViec';
 
 import useAppTheme from '../hooks/useAppTheme';
 
@@ -22,7 +31,6 @@ import TestBottomSheetScreen from '../screens/debug/TestBottomSheetScreen';
 import DeviceListScreen from '../screens/donvi/DeviceListScreen';
 import NewRequestScreen from '../screens/donvi/NewRequestScreen';
 import ThietBiDetailScreen from '../screens/donvi/ThietBiDetailScreen';
-
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -64,9 +72,68 @@ function MainDrawer() {
 }
 
 // New component for KtvLamViec bottom tabs
+// This component will now fetch the task data in real-time
+import { doc, onSnapshot } from 'firebase/firestore'; // Import necessary Firestore functions
+import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+
 function KtvLamViecBottomTabs({ route }) {
   const { colors } = useAppTheme();
-  const { task, onTaskUpdated } = route.params; // Get task and onTaskUpdated from route.params
+  // We will now manage task state internally
+  const { task: initialTask, onTaskUpdated } = route.params; 
+  const [task, setTask] = useState(initialTask);
+  const [loading, setLoading] = useState(!initialTask); // Set loading true if no initial task
+
+  useEffect(() => {
+    // Get the task ID from the initial task data passed via route params
+    const taskId = initialTask?.docId; // Assuming docId is available in initialTask
+
+    if (!taskId) {
+      console.error('Task ID not found in route params.');
+      setLoading(false);
+      return;
+    }
+
+    console.log('Setting up real-time listener for task ID:', taskId);
+    const taskRef = doc(db, 'phan_cong_ktv', taskId);
+
+    const unsubscribe = onSnapshot(taskRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        console.log('Task snapshot received:', docSnapshot.data());
+        setTask({ docId: docSnapshot.id, ...docSnapshot.data() });
+        setLoading(false);
+         // Call the original onTaskUpdated prop if provided
+        if (onTaskUpdated) {
+          onTaskUpdated();
+        }
+      } else {
+        console.log('Task document does not exist.');
+        // Handle case where task might be deleted, e.g., navigate back
+        // navigation.goBack(); // Uncomment if you want to navigate back
+        setTask(null);
+        setLoading(false);
+      }
+    }, (error) => {
+      console.error('Error fetching task snapshot:', error);
+      setLoading(false);
+    });
+
+    // Cleanup listener on component unmount
+    return () => {
+      console.log('Cleaning up task listener for ID:', taskId);
+      unsubscribe();
+    };
+
+  }, [initialTask?.docId]); // Rerun effect if the initial task docId changes
+
+  // Show a loading indicator if task data is still being fetched and not available initially
+  if (loading || !task) {
+    return (
+      <View style={styles.loadingContainer}> {/* You might need to add styles for this */}
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.onSurface }}>Đang tải chi tiết công việc...</Text>
+      </View>
+    );
+  }
 
   return (
     <BottomTab.Navigator
@@ -106,7 +173,7 @@ function KtvLamViecBottomTabs({ route }) {
         },
       })}
     >
-      {/* Use children prop to pass task and onTaskUpdated explicitly */}
+      {/* Pass the task state to the tab components */}
       <BottomTab.Screen 
         name="Thông tin" 
         options={{ title: 'Thông tin' }}
@@ -154,6 +221,15 @@ export default function AppNavigator() {
       <Stack.Screen name="DeviceList" component={DeviceListScreen} />
       <Stack.Screen name="NewRequest" component={NewRequestScreen} />
       <Stack.Screen name="ThietBiDetail" component={ThietBiDetailScreen} options={{ title: 'Chi tiết thiết bị' }} />
+      <Stack.Screen name="PhongList" component={PhongListScreen} options={{ title: 'Danh sách phòng' }} />
+      <Stack.Screen name="AdminRequestList" component={AdminRequestListScreen} options={{ title: 'Danh sách yêu cầu' }} />
+      <Stack.Screen name="TaskList" component={TaskList} options={{ title: 'Danh sách công việc' }} />
+      <Stack.Screen name="Specializations" component={Specializations} options={{ title: 'Chuyên môn' }} />
+      <Stack.Screen name="TaskDetail" component={TaskDetail} options={{ title: 'Chi tiết công việc' }} />
+      {/* Route for the KtvLamViec tabs - pass the task docId and the original onTaskUpdated prop */}
+      <Stack.Screen name="KtvLamViec" options={{ title: 'Chi tiết công việc' }}>
+         {(props) => <KtvLamViecBottomTabs {...props} />} 
+      </Stack.Screen>
     </Stack.Navigator>
   );
 }

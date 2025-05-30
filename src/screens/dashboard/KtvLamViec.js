@@ -46,7 +46,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
   useEffect(() => {
     if (task) {
       console.log('TabCongViec - Task data received:', JSON.stringify(task, null, 2));
-      setIsCheckedIn(task?.trangThai === 'Đang Thực Hiện');
+      setIsCheckedIn(task?.trangThai === 'Đang Thực Hiện' || task?.trangThai === 'Tạm Nghỉ' || task?.trangThai === 'Hoàn Thành');
       setExtensionCount(task?.phanCong?.soLanGiaHan || 0);
       setIsPaused(task?.trangThai === 'Tạm Nghỉ');
     }
@@ -55,7 +55,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
   useEffect(() => {
     // Calculate total elapsed time and remaining time based on tienTrinh
     const calculateTime = () => {
-      if (!task?.tienTrinh || task.tienTrinh.length === 0) {
+      if (!task?.tienTrinh || task.tienTrinh.length === 0 || task?.trangThai === 'Chờ Phản Hồi' || task?.trangThai === 'Đã Từ Chối' || task?.trangThai === 'Bị Hủy' || task?.trangThai === 'Hoàn Thành') {
         setRemainingTimeMillis(task?.thoiGianDuKien ? task.thoiGianDuKien * 60 * 1000 : 0);
         setIsOverdue(false);
         return;
@@ -79,7 +79,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
       }
 
       // If the last event was 'Đang Thực Hiện' and not followed by 'Tạm Nghỉ'
-      if (lastCheckInTime !== null) {
+      if (task?.trangThai === 'Đang Thực Hiện' && lastCheckInTime !== null) {
          totalElapsedTime += (new Date().getTime() - lastCheckInTime);
       }
 
@@ -87,12 +87,12 @@ export function TabCongViec({ task, onTaskUpdated }) {
       const calculatedRemaining = plannedDurationMillis - totalElapsedTime; // Allow negative for overdue
 
       setRemainingTimeMillis(calculatedRemaining);
-      setIsOverdue(calculatedRemaining < 0 && (task?.trangThai === 'Đang Thực Hiện' || task?.trangThai === 'Tạm Nghỉ'));
+      setIsOverdue(calculatedRemaining < 0);
     };
 
     calculateTime();
 
-    // Set up interval to update remaining time
+    // Set up interval to update remaining time ONLY if task is 'Đang Thực Hiện'
     if (task?.trangThai === 'Đang Thực Hiện') {
       timerRef.current = setInterval(() => {
         setRemainingTimeMillis(prev => {
@@ -106,13 +106,13 @@ export function TabCongViec({ task, onTaskUpdated }) {
     }
 
     // Update currentTime state every second regardless of task status for accurate calculations
-    const globalTimer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    // const globalTimer = setInterval(() => {
+    //   setCurrentTime(new Date());
+    // }, 1000);
 
     return () => {
       clearInterval(timerRef.current);
-      clearInterval(globalTimer);
+      // clearInterval(globalTimer);
     };
 
   }, [task?.tienTrinh, task?.thoiGianDuKien, task?.trangThai]); // Depend on tienTrinh, thoiGianDuKien and trangThai
@@ -125,14 +125,22 @@ export function TabCongViec({ task, onTaskUpdated }) {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
     if (remainingTimeMillis < 0) {
-       return `+${formattedTime}`;
+       return `+${formattedTime}`; // Show + for overdue time
     } else {
-       return formattedTime;
+       return formattedTime; // Show remaining time
     }
   };
+
+   const getSecondsDisplay = () => {
+       if (remainingTimeMillis === null) return '00';
+       const totalSeconds = Math.abs(Math.round(remainingTimeMillis / 1000));
+       const seconds = totalSeconds % 60;
+       return seconds.toString().padStart(2, '0');
+   };
+
 
   const formatDurationInMinutes = (minutes) => {
     if (minutes === null || minutes === undefined) return 'N/A';
@@ -177,7 +185,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
     }
 
     // If the last event was 'Đang Thực Hiện' and not followed by 'Tạm Nghỉ'
-    if (lastCheckInTime !== null) {
+    if (task?.trangThai === 'Đang Thực Hiện' && lastCheckInTime !== null) {
       totalElapsedTime += (new Date().getTime() - lastCheckInTime);
     }
 
@@ -186,7 +194,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
   };
 
   const progress = calculateProgress();
-  const progressColor = progress < 100 ? colors.primary : colors.error;
+  const progressColor = isOverdue ? colors.error : colors.primary; // Use error color for overdue progress
 
   const handleExtendRequest = () => {
     setShowExtendDialog(true);
@@ -230,6 +238,9 @@ export function TabCongViec({ task, onTaskUpdated }) {
   };
 
   const handlePauseTask = async () => {
+    // Logic to check if task is already paused is in rendering, this handles the action
+     if (isPaused) return; // Prevent pausing if already paused
+
     if (!pauseImageUri) {
       Alert.alert('Lỗi', 'Vui lòng chụp ảnh trước khi tạm nghỉ');
       return;
@@ -264,7 +275,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
             tienTrinh: arrayUnion({
               thoiGian: new Date().toISOString(),
               trangThai: 'Tạm Nghỉ',
-              ghiChu: pauseNote,
+              ghiChu: pauseNote, // Use pauseNote for the timeline entry
               hinhAnh: downloadURL
             })
           });
@@ -274,6 +285,8 @@ export function TabCongViec({ task, onTaskUpdated }) {
           Alert.alert('Thành công', 'Đã tạm nghỉ công việc');
           onTaskUpdated?.();
           setLoading(false);
+          setIsPaused(true); // Explicitly set paused state
+          setIsCheckedIn(true); // Still considered checked in, just paused
           setUploadingPauseImage(false);
         }
       );
@@ -306,7 +319,6 @@ export function TabCongViec({ task, onTaskUpdated }) {
           ghiChu: `Yêu cầu gia hạn thêm ${requestedMinutes} phút. Lý do: ${extensionReason || 'Không có lý do'}`,
         }),
         // Optional: Update total requested extension count/minutes on the task itself
-        // This might require restructuring task document or creating a subcollection for extensions
         // 'phanCong.soLanGiaHan': (task?.phanCong?.soLanGiaHan || 0) + 1,
         // You might need another field for total requested minutes if you track that
       });
@@ -385,12 +397,13 @@ export function TabCongViec({ task, onTaskUpdated }) {
         Alert.alert('Lỗi', 'Đã xảy ra lỗi khi chụp hoặc tải ảnh tiến độ.');
         setIsCapturingProgressPhoto(false);
       }
-    } else {
-      console.log('Progress photo capture cancelled');
     }
   };
 
   const handleCheckIn = async () => {
+    // Logic to check if already checked in is in rendering, this handles the action
+    // if (isCheckedIn && !isPaused) return; // Prevent checking in if already active and not paused
+
     const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
 
     if (cameraStatus !== 'granted') {
@@ -435,19 +448,19 @@ export function TabCongViec({ task, onTaskUpdated }) {
             const isResumingFromPause = task?.trangThai === 'Tạm Nghỉ';
 
             const updateData = {
-                trangThai: 'Đang Thực Hiện',
+                trangThai: 'Đang Thực Hiện', // Always set to Đang Thực Hiện on check-in/resume
                 thoiGianCapNhat: Date.now(),
                 updatedAt: Date.now(),
               tienTrinh: arrayUnion({
                 thoiGian: now.toISOString(),
-                trangThai: 'Đang Thực Hiện',
-                ghiChu: isResumingFromPause ? 'Tiếp tục công việc' : 'Bắt đầu công việc',
+                trangThai: isResumingFromPause ? 'Tiếp tục công việc' : 'Bắt đầu công việc', // Use appropriate status for timeline
+                ghiChu: '', // Optional note for check-in/resume
                 hinhAnh: downloadURL
               })
             };
 
-            // Only update start and end time on initial check-in
-            if (!task?.thoiGianBatDau) {
+            // Only update start and end time on initial check-in (if not already set)
+            if (!task?.thoiGianBatDau || task?.thoiGianBatDau === '') { // Also check for empty string
               const plannedDurationMillis = (task.thoiGianDuKien || 0) * 60 * 1000;
               const predictedEndTime = new Date(now.getTime() + plannedDurationMillis);
                updateData.thoiGianBatDau = now.toISOString();
@@ -456,12 +469,16 @@ export function TabCongViec({ task, onTaskUpdated }) {
                console.log('Setting end time:', predictedEndTime.toISOString());
                console.log('Planned duration (minutes):', task.thoiGianDuKien);
             }
-
+             // Always update the document with the new status and timeline entry
             await updateDoc(taskRef, updateData);
 
             setIsUploadingCheckInOrResume(false);
+            // Update local state to reflect the change immediately
+            setIsCheckedIn(true); // Set to true as it's now 'Đang Thực Hiện'
+            setIsPaused(false); // Ensure paused state is false
+
             Alert.alert('Thành công', isResumingFromPause ? 'Đã tiếp tục công việc!' : 'Đã check-in và bắt đầu công việc!');
-            onTaskUpdated?.();
+            onTaskUpdated?.(); // Notify parent to refresh data if needed
           }
         );
       } catch (error) {
@@ -469,23 +486,253 @@ export function TabCongViec({ task, onTaskUpdated }) {
         Alert.alert('Lỗi', 'Đã xảy ra lỗi trong quá trình check-in/tiếp tục.');
         setIsUploadingCheckInOrResume(false);
       }
-    } else {
-      console.log('Check-in/Resume photo capture cancelled');
     }
   };
 
   if (!task) return null;
 
+   // Calculate actual elapsed time and planned duration for the report
+  const calculateReportTimes = () => {
+    let totalElapsedTime = 0; // Time actually spent working (excluding pauses)
+    let lastCheckInTime = null;
+    const events = task?.tienTrinh || [];
+
+    for (const event of events) {
+      const eventTime = new Date(event.thoiGian).getTime();
+      if (event.trangThai === 'Đang Thực Hiện') {
+        lastCheckInTime = eventTime;
+      } else if (event.trangThai === 'Tạm Nghỉ' && lastCheckInTime !== null) {
+        totalElapsedTime += (eventTime - lastCheckInTime);
+        lastCheckInTime = null; // Reset after pairing
+      }
+      // Handle 'Hoàn Thành' - calculate time from last check-in to completion if not paired with a pause
+       if (event.trangThai === 'Hoàn Thành' && lastCheckInTime !== null) {
+         totalElapsedTime += (eventTime - lastCheckInTime);
+         lastCheckInTime = null; // Reset
+       }
+    }
+
+    // If the last event was 'Đang Thực Hiện' and task is complete, add time until completion
+     // This case is implicitly handled by the 'Hoàn Thành' check above if it's the last event
+
+    const plannedDurationMillis = (task?.thoiGianDuKien || 0) * 60 * 1000;
+    // Calculate total time from start to end, including pauses, if task is completed
+    let totalTimeIncludingPauses = 0;
+    if (task?.trangThai === 'Hoàn Thành' && task?.thoiGianBatDau && task?.thoiGianHoanThien) {
+      totalTimeIncludingPauses = new Date(task.thoiGianHoanThien).getTime() - new Date(task.thoiGianBatDau).getTime();
+    }
+     // If task is not complete but was Đang Thực Hiện, add time until now
+    else if (task?.trangThai === 'Đang Thực Hiện' && lastCheckInTime !== null) {
+       totalElapsedTime += (new Date().getTime() - lastCheckInTime); // Add time until now for ongoing task
+       // For ongoing tasks, total time including pauses isn't meaningful in this context
+    }
+
+    const timeWorkedMinutes = Math.round(totalElapsedTime / (1000 * 60));
+     // Time elapsed including pauses if completed, otherwise N/A or calculation based on current time if ongoing (less useful)
+     const totalElapsedIncludingPausesMinutes = task?.trangThai === 'Hoàn Thành' && task?.thoiGianBatDau && task?.thoiGianHoanThien
+      ? Math.round(totalTimeIncludingPauses / (1000 * 60))
+      : null; // Or calculate based on current time if needed
+
+    const timeOverdueMinutes = plannedDurationMillis > 0 && totalElapsedTime > plannedDurationMillis
+      ? Math.round((totalElapsedTime - plannedDurationMillis) / (1000 * 60))
+      : 0;
+
+     // Time difference between total elapsed (including pauses) and actual time worked
+    const timeSpawnedMinutes = totalElapsedIncludingPausesMinutes !== null
+       ? totalElapsedIncludingPausesMinutes - timeWorkedMinutes
+       : 0; // Or N/A if task not complete
+
+
+    return {
+      timeWorkedMinutes,
+      timeOverdueMinutes,
+      timeSpawnedMinutes,
+      totalElapsedIncludingPausesMinutes
+    };
+  };
+
+   const { timeWorkedMinutes, timeSpawnedMinutes } = task?.trangThai === 'Hoàn Thành' ? calculateReportTimes() : { timeWorkedMinutes: 0, timeSpawnedMinutes: 0 };
+
+
   const expectedDuration = formatDurationInMinutes(task?.thoiGianDuKien);
 
   // Determine which UI to show based on task status
-  const showInitialUI = !isCheckedIn || isPaused; // Show initial UI if not checked in or if paused
+   const isCompleted = task?.trangThai === 'Hoàn Thành';
+   const isOngoing = task?.trangThai === 'Đang Thực Hiện';
+   const isPausedState = task?.trangThai === 'Tạm Nghỉ';
+   const showInitialUI = !isCheckedIn;
+
 
   return (
     <ScrollView style={styles.tabContentScroll} contentContainerStyle={styles.tabCongViecContent}>
-      {/* Conditionally render UI based on task status */}
-      {showInitialUI ? (
-        // Initial or Paused states UI
+      {isCompleted ? (
+        // Completed Task UI
+        <View style={styles.completedContainer}>
+           <MaterialCommunityIcons name="check-circle" size={120} color={colors.success} />
+           <Text style={[styles.completedText, { color: colors.onSurface }]}>Công việc đã hoàn tất</Text>
+
+           {/* Completion Report Card */}
+           <Card style={[styles.reportCard, { backgroundColor: colors.surface, borderColor: colors.outline, borderWidth: 1 }]}>
+              <Card.Content>
+                 <View style={styles.reportHeader}>
+                   <MaterialCommunityIcons name="clipboard-list-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.reportTitle, { color: colors.onSurface }]}>Báo cáo công việc</Text>
+                 </View>
+                 <Divider style={{ marginVertical: 8 }} />
+
+                 <View style={styles.reportRow}>
+                   <View style={styles.reportLabelIcon}>
+                       <MaterialCommunityIcons name="play-circle-outline" size={16} color={colors.info} />
+                      <Text style={[styles.reportLabel, { color: colors.onSurfaceVariant }]}>Thời gian bắt đầu:</Text>
+                   </View>
+                    <Text style={[styles.reportValue, { color: colors.onSurface }]}>
+                       {task?.thoiGianBatDau ? format(new Date(task.thoiGianBatDau), 'dd/MM/yyyy HH:mm', { locale: vi }) : 'N/A'}
+                    </Text>
+                 </View>
+
+                 <View style={styles.reportRow}>
+                    <View style={styles.reportLabelIcon}>
+                       <MaterialCommunityIcons name="check-circle-outline" size={16} color={colors.success} />
+                       <Text style={[styles.reportLabel, { color: colors.onSurfaceVariant }]}>Thời gian hoàn thành:</Text>
+                    </View>
+                    <Text style={[styles.reportValue, { color: colors.onSurface }]}>
+                       {task?.thoiGianHoanThien ? format(new Date(task.thoiGianHoanThien), 'dd/MM/yyyy HH:mm', { locale: vi }) : 'N/A'}
+                    </Text>
+                 </View>
+
+                  <View style={styles.reportRow}>
+                     <View style={styles.reportLabelIcon}>
+                        <MaterialCommunityIcons name="clock-outline" size={16} color={colors.onSurfaceVariant} />
+                        <Text style={[styles.reportLabel, { color: colors.onSurfaceVariant }]}>Thời gian làm việc:</Text>
+                     </View>
+                    <Text style={[styles.reportValue, { color: colors.onSurface }]}>{timeWorkedMinutes} phút</Text>
+                  </View>
+
+                   <View style={styles.reportRow}>
+                      <View style={styles.reportLabelIcon}>
+                        <MaterialCommunityIcons name="timer-off-outline" size={16} color={colors.error} />
+                         <Text style={[styles.reportLabel, { color: colors.onSurfaceVariant }]}>Thời gian phát sinh:</Text>
+                      </View>
+                     <Text style={[styles.reportValue, { color: colors.onSurface }]}>{timeSpawnedMinutes} phút</Text>
+                   </View>
+
+                   {/* Placeholder for work ratio bar */}
+                  <View style={[styles.ratioBarPlaceholder, { backgroundColor: colors.outline }]} >
+                     {/* This bar would visually represent timeWorkedMinutes vs plannedDurationMinutes */}
+                     {/* Could add a calculation here to set the width dynamically */}
+                      <View style={[{ 
+                          height: '100%', 
+                          backgroundColor: colors.primary, 
+                           width: `${Math.min(100, (timeWorkedMinutes / (task?.thoiGianDuKien || 1) / 60 * 100)).toFixed(0)}%` 
+                          }]} 
+                      />
+                  </View>
+                   <Text style={[styles.ratioLabel, { color: colors.onSurfaceVariant }]}>Tỷ lệ thời gian làm việc</Text>
+
+              </Card.Content>
+           </Card>
+
+        </View>
+      ) : isOngoing ? (
+          // Ongoing Task UI
+          <>
+            <Card style={[styles.checkinCard, { backgroundColor: colors.surface }]}>
+              <Card.Content style={styles.checkinCardContent}>
+                <MaterialCommunityIcons name="briefcase" size={60} color={colors.primary} style={styles.checkinIcon} />
+
+                <View style={styles.circularTimerContainer}>
+                  {/* Circular timer - You would typically use a library for actual circular progress */}
+                  <View style={[styles.circularProgressPlaceholder, { borderColor: isOverdue ? colors.error : colors.primary }]}> {/* Added styles directly */} 
+                    <Text style={[styles.displayTimeText, { color: isOverdue ? colors.error : colors.onSurface, fontSize: 48, fontWeight: 'bold' }]}> {/* Added styles directly */} 
+                        {calculateDisplayTime()}
+                    </Text>
+                     <Text style={[styles.secondsText, { color: isOverdue ? colors.error : colors.onSurfaceVariant, fontSize: 24, }]}> {/* Added styles directly */} 
+                        {getSecondsDisplay()}
+                     </Text>
+                    {/* Extend button */}
+                    <TouchableOpacity 
+                      style={[styles.extendButton, { backgroundColor: colors.primary }]} // Added styles directly
+                      onPress={handleExtendRequest}
+                    >
+                        <MaterialCommunityIcons name="plus" size={24} color={colors.onPrimary} />
+                    </TouchableOpacity>
+                  </View>
+                   {/* Simple linear progress bar under the circular timer */}
+                   <View style={[styles.progressBarContainer, { width: '100%', marginTop: 24 }]}> {/* Added styles directly */} 
+                     <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: progressColor, height: 8, borderRadius: 4, }]} /> {/* Added styles directly */} 
+                </View>
+            </View>
+
+                {/* Info chips */}
+            <View style={[styles.infoChipsContainer, { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginBottom: 24, }]}> {/* Added styles directly */} 
+
+                <Chip 
+                    icon="history" 
+                    onPress={handleExtendRequest} // Keep the same handler for now, or change if needed
+                    style={[styles.infoChip, { borderColor: colors.outline, backgroundColor: colors.surface }]} 
+                    textStyle={{ color: colors.onSurfaceVariant }}
+                >
+                    Gia hạn: {extensionCount} lần
+                </Chip>
+
+                <Chip 
+                    icon="clock-outline" 
+                    style={[styles.infoChip, { borderColor: colors.outline, backgroundColor: colors.surface }]} 
+                    textStyle={{ color: colors.onSurfaceVariant }}
+                >
+                    Dự kiến: {expectedDuration}
+                </Chip>
+
+            </View>
+          </Card.Content>
+        </Card>
+
+            {/* Action buttons - Pause, Photo, Complete */}
+        <View style={[styles.actionButtonsContainer, { flexDirection: 'row', justifyContent: 'space-around', width: '100%', paddingHorizontal: 16, }]}> {/* Added styles directly */} 
+
+              <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: colors.errorContainer }]} // Added styles directly // Use error color for pause
+                  onPress={() => setShowPauseDialog(true)} // Open pause dialog
+                  disabled={loading} // Disable while loading
+              >
+                  {loading && !uploadingPauseImage ? ( // Show general loading if not specifically image uploading
+                    <ActivityIndicator size="small" color={colors.onErrorContainer} />
+                ) : (
+                <MaterialCommunityIcons 
+                    name="pause"
+                  size={30} 
+                    color={colors.onErrorContainer}
+                />
+                 )}
+            </TouchableOpacity>
+
+              <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: colors.surfaceVariant }]} // Added styles directly// Use neutral color for camera
+                  onPress={handleCaptureProgressPhoto}
+                  disabled={isCapturingProgressPhoto || loading} // Disable while capturing or loading
+              >
+                  {isCapturingProgressPhoto ? (
+                      <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
+                  ) : (
+                      <MaterialCommunityIcons name="camera" size={30} color={colors.onSurfaceVariant} />
+                  )}
+            </TouchableOpacity>
+
+              <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: colors.successContainer }]} // Added styles directly// Use success color for complete
+                  onPress={handleCompleteTask}
+                  disabled={loading} // Disable while loading
+              >
+                 {loading && !isCapturingProgressPhoto && !uploadingPauseImage ? ( // Show general loading if not other specific loadings
+                   <ActivityIndicator size="small" color={colors.onSuccessContainer} />
+                ) : (
+                <MaterialCommunityIcons name="check" size={30} color={colors.onSuccessContainer} />
+                )}
+            </TouchableOpacity>
+        </View>
+          </>
+      ) : (
+        // Initial or Paused Task UI
         <>
       <Card style={[styles.checkinCard, { backgroundColor: colors.surface }]}>
         <Card.Content style={styles.checkinCardContent}>
@@ -507,7 +754,7 @@ export function TabCongViec({ task, onTaskUpdated }) {
 
               {/* Placeholder for the progress bar */}
                {/* In initial/paused state, show total duration as if no time has passed */}
-               <View style={styles.progressBarContainer}>
+               <View style={styles.initialProgressBar}>
                  <View style={[styles.progressBar, { width: '0%', backgroundColor: colors.primary }]} />
                </View>
 
@@ -531,112 +778,6 @@ export function TabCongViec({ task, onTaskUpdated }) {
                   </>
               )}
           </TouchableOpacity>
-        </>
-      ) : (
-        // 'Đang Thực Hiện' state UI
-        <>
-          <Card style={[styles.checkinCard, { backgroundColor: colors.surface }]}>
-            <Card.Content style={styles.checkinCardContent}>
-              {/* Image preview or default icon */}
-              {capturedImageUri ? ( // capturedImageUri is currently not used for check-in photo display
-            <Image 
-              source={{ uri: capturedImageUri }} 
-              style={styles.capturedImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <MaterialCommunityIcons name="briefcase" size={60} color={colors.primary} style={styles.checkinIcon} />
-          )}
-
-          <View style={styles.circularTimerContainer}>
-                {/* Circular timer placeholder - consider using a library for actual circular progress */}
-                <View style={[styles.circularProgressPlaceholder, { borderColor: isOverdue ? colors.error : colors.primary }]}>
-                  <Text style={[styles.displayTimeText, { color: isOverdue ? colors.error : colors.onSurface }]}>
-                      {calculateDisplayTime()}
-                  </Text>
-                  {/* Extend button */}
-                  <TouchableOpacity 
-                    style={[styles.extendButton, { backgroundColor: colors.primary }]} 
-                    onPress={handleExtendRequest}
-                  >
-                      <MaterialCommunityIcons name="plus" size={24} color={colors.onPrimary} />
-                  </TouchableOpacity>
-                </View>
-                 {/* Simple linear progress bar under the circular timer */}
-                 <View style={styles.progressBarContainer}>
-                   <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: progressColor }]} />
-              </View>
-          </View>
-
-              {/* Info buttons */}
-          <View style={styles.infoButtonsContainer}>
-              <TouchableOpacity 
-                style={[styles.infoButton, { borderColor: colors.outline }]} 
-                onPress={handleExtendRequest}
-              >
-                  <MaterialCommunityIcons name="history" size={18} color={colors.onSurfaceVariant} />
-                  <Text style={[styles.infoButtonText, { color: colors.onSurfaceVariant }]}>
-                      Gia hạn: {extensionCount} lần
-                  </Text>
-              </TouchableOpacity>
-
-                {/* Elapsed time display - now redundant with calculated remaining time */}
-                {/* Keeping it for now, but consider removing if remaining time is sufficient */}
-              <View style={[styles.infoButton, { borderColor: colors.outline }]}>
-                  <MaterialCommunityIcons name="clock-outline" size={18} color={colors.onSurfaceVariant} />
-                  <Text style={[styles.infoButtonText, { color: colors.onSurfaceVariant }]}>
-                     Dự kiến: {expectedDuration}
-                  </Text>
-              </View>
-          </View>
-        </Card.Content>
-      </Card>
-
-          {/* Action buttons */}
-      <View style={styles.actionButtonsContainer}>
-            {/* Pause Button */}
-          <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: colors.errorContainer }]}
-              onPress={handlePauseTask} // This button is only shown in 'Đang Thực Hiện' state now
-              disabled={loading} // Disable if general loading is true
-            >
-               {loading && !uploadingPauseImage ? ( // Show general loading if not specifically image uploading
-                  <ActivityIndicator size="small" color={colors.onErrorContainer} />
-              ) : (
-              <MaterialCommunityIcons 
-                  name="pause"
-                size={30} 
-                  color={colors.onErrorContainer}
-              />
-               )}
-          </TouchableOpacity>
-
-            {/* Capture Progress Photo Button */}
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: colors.surfaceVariant }]} 
-              onPress={handleCaptureProgressPhoto}
-              disabled={isCapturingProgressPhoto || loading} // Disable if capturing photo or general loading
-          >
-              {isCapturingProgressPhoto ? (
-                  <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
-              ) : (
-                  <MaterialCommunityIcons name="camera" size={30} color={colors.onSurfaceVariant} />
-              )}
-          </TouchableOpacity>
-
-            {/* Complete Task Button */}
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.successContainer }]}
-              onPress={handleCompleteTask}
-              disabled={loading} // Disable if general loading is true
-            >
-              {loading && !isCapturingProgressPhoto && !uploadingPauseImage ? ( // Show general loading if not other specific loadings
-                 <ActivityIndicator size="small" color={colors.onSuccessContainer} />
-              ) : (
-              <MaterialCommunityIcons name="check" size={30} color={colors.onSuccessContainer} />
-              )}
-          </TouchableOpacity>
-      </View>
         </>
       )}
 
@@ -1855,5 +1996,70 @@ const styles = StyleSheet.create({
   checkInButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  completedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  completedText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 16,
+  },
+  reportCard: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    elevation: 4,
+    marginBottom: 24,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  reportRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  reportLabelIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reportLabel: {
+    fontSize: 14,
+  },
+  reportValue: {
+    fontSize: 14,
+    flex: 1,
+    textAlign: 'right',
+  },
+  ratioBarPlaceholder: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    marginTop: 16,
+  },
+  ratioLabel: {
+    fontSize: 14,
+    marginTop: 8,
+  },
+  dialogLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  dialogLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
   },
 }); 

@@ -53,7 +53,7 @@ export default function HomeScreen() {
           <Text style={[styles.welcomeText, { color: colors.onSurface }]}>
             {currentUser ? `Xin chào, ${currentUser.tenTaiKhoan}` : 'Bạn chưa đăng nhập'}
           </Text>
-          {currentUser?.vaiTroId === 1 && (
+          {/* {currentUser?.vaiTroId === 1 && (
             <TouchableOpacity 
               style={[styles.adminButton, { backgroundColor: colors.primary }]}
               onPress={() => navigation.navigate('AdminDashboard')}
@@ -61,7 +61,7 @@ export default function HomeScreen() {
               <MaterialCommunityIcons name="view-dashboard" size={24} color="white" />
               <Text style={styles.adminButtonText}>Bảng điều khiển</Text>
             </TouchableOpacity>
-          )}
+          )} */}
         </View>
 
         <View style={styles.newsContainer}>
