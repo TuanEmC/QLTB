@@ -7,6 +7,8 @@ import { getThietBiWithChiTietDisplay } from '../../services/thietBiService';
 import useAppTheme from '../../hooks/useAppTheme';
 import ChiTietYeuCauFormSection from '../../components/ChiTietYeuCauFormSection';
 import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native';
+
 
 
 const Tab = createMaterialTopTabNavigator();
@@ -24,7 +26,7 @@ function ThongTinThietBiTab({ thietBi }) {
     );
 }
 
-function FormThemChiTietTab({ thietBi, yeuCauId }) {
+function FormThemChiTietTab({ thietBi, yeuCauId, chiTietYeuCauId }) {
     const navigation = useNavigation();
 
     return (
@@ -32,9 +34,11 @@ function FormThemChiTietTab({ thietBi, yeuCauId }) {
             <ChiTietYeuCauFormSection
                 yeuCauId={yeuCauId}
                 thietBiId={thietBi.id}
+                chiTietYeuCauId={chiTietYeuCauId}
                 onSuccess={() => {
                     console.log('✅ Đã lưu xong chi tiết yêu cầu');
-                    navigation.goBack();
+                    navigation.navigate('NewRequest', { yeuCauId: yeuCauId });
+                    // navigation.pop();
                 }}
             />
         </View>
@@ -46,7 +50,8 @@ function FormThemChiTietTab({ thietBi, yeuCauId }) {
 
 export default function ThietBiDetailScreen() {
     const route = useRoute();
-    const { thietBiId, yeuCauId } = route.params;
+    const { thietBiId, yeuCauId, chiTietYeuCauId } = route.params;
+
     const [thietBi, setThietBi] = useState(null);
     const { colors } = useAppTheme();
 
@@ -55,8 +60,14 @@ export default function ThietBiDetailScreen() {
     }, [thietBiId]);
 
     if (!thietBi) {
-        return <Text>Đang tải dữ liệu...</Text>;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={{ marginTop: 12, color: colors.onSurface }}>Đang tải thông tin thiết bị...</Text>
+            </View>
+        );
     }
+
 
     return (
         <Tab.Navigator
@@ -73,7 +84,7 @@ export default function ThietBiDetailScreen() {
             </Tab.Screen>
             {yeuCauId && (
                 <Tab.Screen name="Thêm vào yêu cầu">
-                    {() => <FormThemChiTietTab thietBi={thietBi} yeuCauId={yeuCauId} />}
+                    {() => <FormThemChiTietTab thietBi={thietBi} yeuCauId={yeuCauId} chiTietYeuCauId={chiTietYeuCauId} />}
                 </Tab.Screen>
             )}
         </Tab.Navigator>

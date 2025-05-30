@@ -47,12 +47,14 @@ export const deleteFromFirebase = async (fileUrl) => {
     try {
         const refPath = getStoragePathFromUrl(fileUrl);
         if (!refPath) throw new Error('Invalid file URL');
-        const reference = ref(storage, refPath); // ← đã fix
+        const reference = ref(storage, refPath);
         await deleteObject(reference);
+        console.log('🗑️ File deleted from Firebase Storage:', fileUrl);
     } catch (error) {
-        console.error('Delete failed:', error);
+        console.error('❌ Failed to delete from Firebase Storage:', error.message);
     }
 };
+
 
 /**
  * Lấy đường dẫn Firebase Storage từ URL

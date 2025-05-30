@@ -11,6 +11,12 @@ export const TRANG_THAI_YEU_CAU = {
 
 export const TRANG_THAI_YEU_CAU_ALL = Object.values(TRANG_THAI_YEU_CAU);
 
+export const TRANG_THAI_YEU_CAU_MAP = Object.entries(TRANG_THAI_YEU_CAU).reduce(
+    (acc, [key, label]) => ({ ...acc, [label]: key }),
+    {}
+);
+
+
 export const getTrangThaiYeuCauColor = (trangThai) => {
     switch (trangThai) {
         case TRANG_THAI_YEU_CAU.CHO_XAC_NHAN:

@@ -18,7 +18,7 @@ export const defaultThietBi = {
 };
 
 export const createThietBi = (doc) => ({
-  id: doc.id,
   ...defaultThietBi,
   ...doc.data(),
+  id: doc.id,
 });

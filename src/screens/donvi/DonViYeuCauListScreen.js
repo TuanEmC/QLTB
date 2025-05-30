@@ -1,7 +1,7 @@
 // 📁 src/screens/donvi/DonViYeuCauListScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { getYeuCauByDonVi, deleteYeuCau } from '../../services/yeuCauService';
+import { getYeuCauByDonVi, deleteYeuCau, deleteYeuCauWithCascade } from '../../services/yeuCauService';
 import { useSession } from '../../context/SessionContext';
 import { getTrangThaiYeuCauColor, TRANG_THAI_YEU_CAU, TRANG_THAI_YEU_CAU_ALL } from '../../constants/trangThaiYeuCau';
 import useAppTheme from '../../hooks/useAppTheme';
@@ -12,6 +12,7 @@ import { useRef, useMemo } from 'react';
 import { BottomSheet, ListItem } from 'react-native-elements';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native';
 
 
 
@@ -25,6 +26,8 @@ export default function DonViYeuCauListScreen() {
     const snapPoints = useMemo(() => ['40%'], []);
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const navigation = useNavigation();
+    const [isLoading, setIsLoading] = useState(false);
+
 
 
     const openFilterSheet = () => {
@@ -41,10 +44,17 @@ export default function DonViYeuCauListScreen() {
     }, [currentUser, trangThaiFilter]);
 
     const loadData = async () => {
-        //console.log('📥 Đang load yêu cầu cho đơn vị:', currentUser.donViId);
-        const data = await getYeuCauByDonVi(currentUser.donViId);
-        setYeuCauList(trangThaiFilter ? data.filter(yc => yc.trangThai === trangThaiFilter) : data);
+        setIsLoading(true);
+        try {
+            const data = await getYeuCauByDonVi(currentUser.donViId);
+            setYeuCauList(trangThaiFilter ? data.filter(yc => yc.trangThai === trangThaiFilter) : data);
+        } catch (e) {
+            console.error('❌ Lỗi khi load yêu cầu:', e);
+        } finally {
+            setIsLoading(false);
+        }
     };
+
 
 
     const handleLongPress = (item) => {
@@ -53,13 +63,20 @@ export default function DonViYeuCauListScreen() {
                 { text: 'Hủy', style: 'cancel' },
                 {
                     text: 'Xóa', style: 'destructive', onPress: async () => {
-                        await deleteYeuCau(item.id);
-                        loadData();
+                        console.log('🗑️ Đang xoá yêu cầu với id =', item.id);
+                        try {
+                            await deleteYeuCauWithCascade(String(item.id));
+                            console.log('✅ Xoá thành công');
+                            loadData();
+                        } catch (e) {
+                            console.error('❌ Lỗi xoá yêu cầu:', e);
+                        }
                     },
                 },
             ]);
         }
     };
+
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
@@ -70,7 +87,7 @@ export default function DonViYeuCauListScreen() {
             <Text style={[styles.moTa, { color: colors.onSurface }]}>{item.moTa}</Text>
             <View style={styles.metaRow}>
                 <Text style={{ color: colors.onSurfaceVariant }}>
-                    {formatNgayGio(item.ngayYeuCau)}
+                    {formatNgayGio(item.createdAt)}
                 </Text>
                 <View style={[styles.trangThaiBox, { backgroundColor: getTrangThaiYeuCauColor(item.trangThai) }]}>
                     <Text style={styles.trangThaiText}>{item.trangThai}</Text>
@@ -109,12 +126,20 @@ export default function DonViYeuCauListScreen() {
 
 
 
-                    <FlatList
-                        data={yeuCauList}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderItem}
-                        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-                    />
+                    {isLoading ? (
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 32 }}>
+                            <Text style={{ marginBottom: 12, color: colors.onSurfaceVariant }}>Đang tải danh sách...</Text>
+                            <ActivityIndicator size="large" color={colors.primary} />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={yeuCauList}
+                            keyExtractor={(item) => item.id}
+                            renderItem={renderItem}
+                            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                        />
+                    )}
+
                 </View>
             </AppLayout>
 

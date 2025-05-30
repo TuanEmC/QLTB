@@ -24,18 +24,34 @@ export const getChiTietYeuCauWithDisplay = async (yeuCauId) => {
 
     // ===== Truy vấn các thiết bị liên quan =====
     const chiTietList = chiTietDocs.map(createChiTietYeuCau);
-    const thietBiIds = Array.from(new Set(chiTietList.map(c => c.thietBiId)));
+
+    const rawIds = chiTietList.map(c => c.thietBiId);
+    const idStrings = rawIds.map(String);
+    const idNumbers = rawIds
+        .map((id) => parseInt(id))
+        .filter((n) => !isNaN(n));
 
     const thietBiMap = {};
-    for (let i = 0; i < thietBiIds.length; i += 10) {
-        const batch = thietBiIds.slice(i, i + 10);
+
+    // Chia batch và query cả 2 kiểu vì dữ liệu cũ không khớp kiểu của id 
+    for (let i = 0; i < idStrings.length; i += 10) {
+        const batch = idStrings.slice(i, i + 10);
         const q = query(collection(db, 'thiet_bi'), where('id', 'in', batch));
         const snap = await getDocs(q);
         snap.docs.forEach(doc => {
             thietBiMap[String(doc.data().id)] = doc.data();
         });
-
     }
+
+    for (let i = 0; i < idNumbers.length; i += 10) {
+        const batch = idNumbers.slice(i, i + 10);
+        const q = query(collection(db, 'thiet_bi'), where('id', 'in', batch));
+        const snap = await getDocs(q);
+        snap.docs.forEach(doc => {
+            thietBiMap[String(doc.data().id)] = doc.data();
+        });
+    }
+
 
     // ===== Xử lý kết quả =====
     const result = [];
@@ -99,56 +115,160 @@ export const saveChiTietYeuCauToFirestore = async ({ yeuCauId, thietBiId, loaiYe
 };
 
 
+// export const updateChiTietYeuCauInFirestore = async (id, { loaiYeuCau, moTa, images }) => {
+//     // 1. Load ảnh hiện tại từ Firestore
+//     const mediaSnap = await getDocs(
+//         query(collection(db, 'anh_minh_chung_bao_cao'), where('chiTietId', '==', id))
+//     );
+
+//     const oldImages = mediaSnap.docs
+//         .map(doc => ({ id: doc.id, ...doc.data() }))
+//         .filter(item => item.type === 'image');
+
+//     const oldUrls = oldImages.map(i => i.urlAnh);
+//     const newUrls = images.map(i => i.uri);
+
+//     // 2. Tìm ảnh cần xoá
+//     for (const old of oldImages) {
+//         if (!newUrls.includes(old.urlAnh)) {
+//             await deleteDoc(doc(db, 'anh_minh_chung_bao_cao', old.id));
+//             await deleteFromFirebase(old.urlAnh);
+//         }
+//     }
+
+//     // 3. Upload ảnh mới (chỉ ảnh chưa có URL trong hệ thống)
+//     const uploadedUrls = [];
+
+//     for (const img of images) {
+//         const isExisting = oldUrls.includes(img.uri);
+//         if (!isExisting) {
+//             const url = await uploadToFirebase(img.uri, `bao_cao/image_${Date.now()}.jpg`);
+//             if (!url) throw new Error('Upload ảnh mới thất bại');
+//             uploadedUrls.push(url);
+//         } else {
+//             uploadedUrls.push(img.uri);
+//         }
+//     }
+
+//     // 4. Cập nhật metadata mới nếu có ảnh mới
+//     for (const url of uploadedUrls) {
+//         if (!oldUrls.includes(url)) {
+//             await addDoc(collection(db, 'anh_minh_chung_bao_cao'), {
+//                 chiTietBaoCaoId: id,
+//                 urlAnh: url,
+//                 type: 'image'
+//             });
+//         }
+//     }
+
+//     // 5. Cuối cùng, cập nhật chi tiết yêu cầu
+//     await updateDoc(doc(db, 'chi_tiet_yeu_cau', id), {
+//         loaiYeuCau,
+//         moTa,
+//         updatedAt: Date.now()
+//     });
+// };
+
 export const updateChiTietYeuCauInFirestore = async (id, { loaiYeuCau, moTa, images }) => {
-    // 1. Load ảnh hiện tại từ Firestore
+    console.log('🛠 Cập nhật chi tiết yêu cầu ID:', id);
+    console.log('📥 Dữ liệu truyền vào:', { loaiYeuCau, moTa, images });
+
     const mediaSnap = await getDocs(
-        query(collection(db, 'anh_minh_chung_bao_cao'), where('chiTietId', '==', id))
+        query(collection(db, 'anh_minh_chung_bao_cao'), where('chiTietBaoCaoId', '==', id))
     );
 
     const oldImages = mediaSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(item => item.type === 'image');
+    console.log('📸 Ảnh cũ từ Firestore:', oldImages.map(i => i.urlAnh));
+
 
     const oldUrls = oldImages.map(i => i.urlAnh);
-    const newUrls = images.map(i => i.uri);
+    const newFirebaseUrls = images
+        .filter(i => i.uri.startsWith('https://'))
+        .map(i => i.uri);
+    console.log('🆕 URL ảnh còn giữ lại (được chọn):', newFirebaseUrls);
 
-    // 2. Tìm ảnh cần xoá
+    // Xóa ảnh không còn trong danh sách mới
     for (const old of oldImages) {
-        if (!newUrls.includes(old.urlAnh)) {
+        if (!newFirebaseUrls.includes(old.urlAnh)) {
+            console.log('❌ Xóa ảnh:', old.urlAnh);
             await deleteDoc(doc(db, 'anh_minh_chung_bao_cao', old.id));
             await deleteFromFirebase(old.urlAnh);
         }
+
     }
 
-    // 3. Upload ảnh mới (chỉ ảnh chưa có URL trong hệ thống)
     const uploadedUrls = [];
 
     for (const img of images) {
-        const isExisting = oldUrls.includes(img.uri);
-        if (!isExisting) {
+        if (img.uri.startsWith('https://')) {
+            uploadedUrls.push(img.uri); // đã tồn tại
+        } else {
             const url = await uploadToFirebase(img.uri, `bao_cao/image_${Date.now()}.jpg`);
             if (!url) throw new Error('Upload ảnh mới thất bại');
             uploadedUrls.push(url);
-        } else {
-            uploadedUrls.push(img.uri);
         }
     }
 
-    // 4. Cập nhật metadata mới nếu có ảnh mới
+    // Thêm metadata mới nếu ảnh mới
     for (const url of uploadedUrls) {
         if (!oldUrls.includes(url)) {
             await addDoc(collection(db, 'anh_minh_chung_bao_cao'), {
                 chiTietBaoCaoId: id,
                 urlAnh: url,
-                type: 'image'
+                type: 'image',
             });
         }
     }
 
-    // 5. Cuối cùng, cập nhật chi tiết yêu cầu
     await updateDoc(doc(db, 'chi_tiet_yeu_cau', id), {
         loaiYeuCau,
         moTa,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     });
+};
+
+
+export const deleteChiTietYeuCauWithImages = async (chiTietId) => {
+    try {
+        // 1. Truy vấn toàn bộ ảnh liên quan (cả string và number)
+        const idAsString = String(chiTietId);
+        const idAsNumber = parseInt(chiTietId);
+        const queries = [
+            getDocs(
+                query(collection(db, 'anh_minh_chung_bao_cao'), where('chiTietBaoCaoId', '==', idAsString))
+            )
+        ];
+        if (!isNaN(idAsNumber)) {
+            queries.push(
+                getDocs(
+                    query(collection(db, 'anh_minh_chung_bao_cao'), where('chiTietBaoCaoId', '==', idAsNumber))
+                )
+            );
+        }
+
+        const results = await Promise.all(queries);
+        const mediaDocs = results.flatMap(res => res.docs);
+
+        // 2. Xóa ảnh khỏi Storage và Firestore
+        for (const docSnap of mediaDocs) {
+            const data = docSnap.data();
+            if (data.urlAnh) {
+                await deleteFromFirebase(data.urlAnh).catch((err) => {
+                    console.warn('⚠️ Không thể xóa ảnh trên storage:', data.urlAnh, err.message);
+                });
+            }
+
+            await deleteDoc(doc(db, 'anh_minh_chung_bao_cao', docSnap.id));
+        }
+
+        // 3. Xóa chi tiết yêu cầu
+        await deleteDoc(doc(db, 'chi_tiet_yeu_cau', chiTietId));
+
+        console.log('✅ Đã xóa chi tiết yêu cầu và ảnh liên quan:', chiTietId);
+    } catch (error) {
+        console.error('❌ Lỗi khi xóa chi tiết yêu cầu:', error);
+        throw error;
+    }
 };
